@@ -3,6 +3,14 @@ ImmunoGeNN accepts input protein sequences and predicts peptide MHC-II immunogen
 
 For more details please see the [pre-print](https://openreview.net/forum?id=kOJQm9YXnB) by Høie et al., "ImmunoGeNN: Accelerating Early Immunogenicity Assessment for Generative Design of Biologics", presented at the EurIPS 2025 Workshop on SIMBIOCHEM.
 
+Example FASTA input:
+```
+>LYZL4_MOUSE Lysozyme-like protein 4
+MQLYLVLLLISYLLTPIGASILGRCTVAKMLYDGGLNYFEGYSLENWVCLAYFESKFNPS
+AVYEDPQDGSTGFGLFQIRDNEWCGHGKNLCSVSCTALLNPNLKDTIQCAKKIVKGKHGM
+GAWPIWSKNCQLSDVLDRWLDGCDL
+```
+
 ### Web-server
 To run ImmunoGeNN without installing it you can try it on these web-servers:
 - Web-server BioLib: https://biolib.com/DTU/ImmunoGeNN/
@@ -14,15 +22,7 @@ To run ImmunoGeNN without installing it you can try it on these web-servers:
 - Input FASTA file of proteins sequences (minimum sequence length of 15 residues)
 - Human reference - Toggle on to set peptide IRS scores to zero if (binding core) is observed in the human reference. Additional reference sequences may be added. Default on.
 
-Example FASTA input:
-```
->LYZL4_MOUSE Lysozyme-like protein 4
-MQLYLVLLLISYLLTPIGASILGRCTVAKMLYDGGLNYFEGYSLENWVCLAYFESKFNPS
-AVYEDPQDGSTGFGLFQIRDNEWCGHGKNLCSVSCTALLNPNLKDTIQCAKKIVKGKHGM
-GAWPIWSKNCQLSDVLDRWLDGCDL
-```
-
-### Human reference proteome filtering
+#### Human reference proteome filtering
 
 Human reference filtering uses the top identified binding core and searches for matches in the human proteome.
 
