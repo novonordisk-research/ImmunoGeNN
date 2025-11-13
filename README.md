@@ -5,8 +5,8 @@ For more details please see the [pre-print](https://openreview.net/forum?id=kOJQ
 
 - Paper: https://openreview.net/forum?id=kOJQm9YXnB
 - Code: https://github.com/novonordisk-research/ImmunoGeNN
-- Web-server DTU: https://services.healthtech.dtu.dk/services/ImmunoGeNN/
 - Web-server BioLib: https://biolib.com/DTU/ImmunoGeNN/
+- Web-server DTU: https://services.healthtech.dtu.dk/services/ImmunoGeNN/
 
 ### Input format
 - Input FASTA file of proteins sequences (minimum sequence length of 15 residues)
