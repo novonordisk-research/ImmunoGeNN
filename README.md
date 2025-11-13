@@ -3,8 +3,8 @@ ImmunoGeNN accepts input protein sequences and predicts peptide MHC-II immunogen
 
 For more details please see the [pre-print](https://openreview.net/forum?id=kOJQm9YXnB) by Høie et al., "ImmunoGeNN: Accelerating Early Immunogenicity Assessment for Generative Design of Biologics", presented at the EurIPS 2025 Workshop on SIMBIOCHEM.
 
-- Paper: https://openreview.net/forum?id=kOJQm9YXnB
-- Code: https://github.com/novonordisk-research/ImmunoGeNN
+### Web-server
+To run ImmunoGeNN without installing it you can try it on these web-servers:
 - Web-server BioLib: https://biolib.com/DTU/ImmunoGeNN/
 - Web-server DTU: https://services.healthtech.dtu.dk/services/ImmunoGeNN/
 
@@ -38,7 +38,7 @@ Output files:
 
 Installation:
 ```
-git clone ImmunoGeNN
+git clone https://github.com/novonordisk-research/ImmunoGeNN
 cd ImmunoGeNN
 unzip data_record.zip
 
