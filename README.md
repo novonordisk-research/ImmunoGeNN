@@ -8,6 +8,8 @@ To run ImmunoGeNN without installing it you can try it on these web-servers:
 - Web-server BioLib: https://biolib.com/DTU/ImmunoGeNN/
 - Web-server DTU: https://services.healthtech.dtu.dk/services/ImmunoGeNN/
 
+----
+
 ### Input format
 - Input FASTA file of proteins sequences (minimum sequence length of 15 residues)
 - Human reference - Toggle on to set peptide IRS scores to zero if (binding core) is observed in the human reference. Additional reference sequences may be added. Default on.
@@ -19,7 +21,6 @@ MQLYLVLLLISYLLTPIGASILGRCTVAKMLYDGGLNYFEGYSLENWVCLAYFESKFNPS
 AVYEDPQDGSTGFGLFQIRDNEWCGHGKNLCSVSCTALLNPNLKDTIQCAKKIVKGKHGM
 GAWPIWSKNCQLSDVLDRWLDGCDL
 ```
-
 
 ### Human reference proteome filtering
 
@@ -33,6 +34,8 @@ Output files:
 - pIRS.csv - CSV file containing per-peptide pIRS scores
 - scores.csv - CSV file containing per-sequence pIRS scores (summed across all peptides)
 - figures.html - Visualization of pIRS scores across sequences and peptides
+
+----
 
 ### Download and run locally
 
@@ -70,11 +73,16 @@ docker run -v $(pwd)/data:/app/data -it app-immunogenn \
     python run.py --fasta_file data/input.fasta
 ```
 
+---
+
 ### Speed benchmark
 
 ![img/runtime.png](img/runtime.png)
 
+---
+
 ### Citation
+```bib
 @inproceedings{
     hoie2025_immunogenn,
     title={ImmunoGe{NN}: Accelerating Early Immunogenicity Assessment for Generative Design of Biologics},
@@ -83,6 +91,7 @@ docker run -v $(pwd)/data:/app/data -it app-immunogenn \
     year={2025},
     url={https://openreview.net/forum?id=kOJQm9YXnB}
 }
+```
 
 ### License
 This project is licensed under the MIT License - see the LICENSE file for details.
