@@ -1,0 +1,17 @@
+name: BioLib Build & Push
+on: push
+concurrency:
+  group: ${{ github.repository }}
+  cancel-in-progress: false
+jobs:
+    build-and-push:
+        runs-on: biolib-github-runner
+        steps:
+          - uses: actions/checkout@v4
+          - name: Build
+            run: docker build -t app-immunogenn:latest .
+          - name: Push
+            run: biolib push $([ "$GITHUB_REF_NAME" != "main" ] && echo -n "--dev") DTU/ImmunoGeNN
+            env:
+              BIOLIB_TOKEN: ${{ secrets.BIOLIB_TOKEN }}
+              BIOLIB_BASE_URL: https://biolib.com

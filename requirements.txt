@@ -1,0 +1,14 @@
+pandas==2.*
+pybiolib==1.2.772
+scikit-learn==1.6
+plotly==6
+scipy==1.13
+fair-esm==2.*
+beautifulsoup4==4.*
+torch==2.6
+tqdm==4.*
+openpyxl==3.*
+lz4==4.*
+numpy==2
+matplotlib==3.*
+lxml

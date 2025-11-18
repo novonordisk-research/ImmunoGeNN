@@ -1,0 +1,88 @@
+biolib_version: 2
+main_output_file: /plots.html
+
+modules:
+    main:
+        image: local-docker://app-immunogenn:latest
+        command: bash run.sh
+        working_directory: /home/biolib/
+        input_files:
+        - COPY / /home/biolib/
+        
+        output_files:
+        - COPY /home/biolib/output/ /
+
+        data_records:
+            - 
+                uri: 'DTU/ImmunoGeNN-params'
+                target_path: /root/.cache/torch/hub/checkpoints/
+
+arguments:
+
+    -
+        key: '--fasta_file'
+        default_value: data/input.fasta
+        description: Protein sequences in FASTA format
+        key_value_separator: ' '
+        required: false
+        type: sequence
+
+
+    -
+        key: "--deimmunize_first_sequence"
+        description: "Deimmunize first sequence"
+        default_value: "false"
+        required: false
+        type: toggle
+        options:
+            'on': 'true'
+            'off': 'false'
+
+        sub_arguments:
+            "true":
+
+            -
+                key: '--variants_to_generate'
+                default_value: "10"
+                description: Variants to suggest (will screen all single amino acid variants and suggest top n variants with highest pIRS reduction)
+                key_value_separator: ' '
+                required: false
+                type: text
+
+            -
+                key: '--ranges_str'
+                default_value: ""
+                description: Optional - Position ranges to deimmunize, e.g. '30-45,90-120'. Default all positions.
+                key_value_separator: ' '
+                required: false
+                type: text
+
+    -
+        key: "--advanced"
+        default_value: ""
+        description: Advanced Settings (Human reference filtering)
+        key_value_separator: " "
+        required: false
+        type: toggle
+        options:
+            "off": "no"
+            "on": "yes"
+        sub_arguments:
+            "yes":
+
+            -
+                key: "--human_references_pkl"
+                description: "Flag binding cores in the human proteome (including VJ germlines). Default on."
+                default_value: "data_record/human_references_9mers.pkl.lz4"
+                required: false
+                type: toggle
+                options:
+                    "on": "data_record/human_references_9mers.pkl.lz4"
+                    "off": "false"
+
+            -
+                key: "--extra_references"
+                description: "Additional reference sequences in FASTA format"
+                default_value: ""
+                required: false
+                type: text-file

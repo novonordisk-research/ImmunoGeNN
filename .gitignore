@@ -1,0 +1,7 @@
+model/
+data_record/
+output/
+*.zip
+__pycache__/
+_old/
+_dev/
