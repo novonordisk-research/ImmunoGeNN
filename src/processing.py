@@ -164,7 +164,7 @@ def normalize_y_hat_to_pirs(
 def preprocess_df_fasta_binding_cores(df_fasta, peptide_col="peptide_seq"):
 
     # Need to give unique index for steps to work
-    indices = (df_fasta["id"] + np.arange(len(df_fasta)).astype(str)).values
+    indices = (df_fasta["id"] + "__" + np.arange(len(df_fasta)).astype(str)).values
 
     # Find max scoring 15mer by aligning all possible 9mer cores
     L = []
