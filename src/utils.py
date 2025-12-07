@@ -80,7 +80,6 @@ def merge_sav_files(sav_files, verbose=True):
 
     # merge
     df_merged = L[0].copy()
-    df_merged["in_reference"] = ""
     for df in L:
         # Update with max
         not_in_ref_m = df["in_reference"] != True
@@ -88,7 +87,6 @@ def merge_sav_files(sav_files, verbose=True):
         df_merged.loc[m, "pIRS_rank"] = df.loc[m, "pIRS_rank"]
         df_merged.loc[m, "pIRS"] = df.loc[m, "pIRS"]
         df_merged.loc[m, "core_seq"] = df.loc[m, "core_seq"]
-
 
     # Normalize to DRB1 range for visualization
     irs = src.processing.normalize_y_hat_0_100_to_irs(

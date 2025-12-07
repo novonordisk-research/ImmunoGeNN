@@ -416,14 +416,14 @@ def main(args):
             # Filter on delta < 0
             if args.mode == "deimmunize":
                 df_sub = df_sub[df_sub['delta'] < 0]
+                df_sub = df_sub.sort_values(by='weight', ascending=True)
+                print(f"\nDeimmunizing variants in range: {start}-{end} ({df_sub.shape[0]} available mutations)")
 
             elif args.mode == "immunize":
                 df_sub = df_sub[df_sub['delta'] > 0]
+                df_sub = df_sub.sort_values(by='weight', ascending=False)
+                print(f"\Immunizing variants in range: {start}-{end} ({df_sub.shape[0]} available mutations)")
 
-            # Sort by weight
-            df_sub = df_sub.sort_values(by='weight', ascending=True)
-
-            print(f"\nDeimmunizing variants in range: {start}-{end} ({df_sub.shape[0]} available mutations)")
             records = src.deimm.df_mut_weighted_to_fasta_records(df_sub, record, top_n=args.variants_to_generate)
             all_records.extend(records)
             #records = src.deimm.df_mut_weighted_to_fasta_records(df_mut_weighted, record_orig, top_n=20)
@@ -441,6 +441,7 @@ def main(args):
 
         # Re-predict
         records = parse_fasta_records(outfile)
+        
         # Predict and save pIRS + scores.csv
         df_fasta = src.processing.parse_records_to_15mer_df(records)
         _, pIRS_files = src.utils.predict_df_fasta(
@@ -452,7 +453,10 @@ def main(args):
             save=True,
         )
 
+        # Write scores.csv
         df_merged2 = src.utils.merge_all_gene_pIRS_files(pIRS_files)
+        src.utils.save_df_fasta_to_pIRS_scores_csv(df_merged2, args.outdir, save=True)
+
         plot_all_sequences_merged(
             df_merged2,
             gene_class="",
