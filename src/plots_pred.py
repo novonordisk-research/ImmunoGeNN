@@ -81,7 +81,7 @@ def plot_deimmunization_plot(
 
     # Plot SAVs + ESM plot
     # df_heatmap_filtered = df_heatmap.copy()
-    seq_df_probs = src.utils.get_seq_esm_LLR_dataframe(record.sequence, esm_model)
+    seq_df_probs = src.utils.get_seq_esm_LLR_dataframe(record.sequence, esm_model=esm_model)
     seq_df_probs_top_n = src.utils.get_logprobs_top_residues(seq_df_probs, n=top_n_esm)
 
     # Mask below top n

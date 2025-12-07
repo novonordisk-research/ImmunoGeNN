@@ -98,7 +98,8 @@ def parse_args():
     )
     parser.add_argument("--top_n", type=int, default=20, help="ESM variants to show")
     parser.add_argument(
-        "--esm_model", type=str, default="esm2_t6_8M_UR50D", help="ESM model to use"
+        #"--esm_model", type=str, default="esm2_t6_8M_UR50D", help="ESM model to use"
+        "--esm_model", type=str, default="esm2_t33_650M_UR50D", help="ESM model to use"
     )
     parser.add_argument(
         "--tsv_file",
@@ -397,7 +398,7 @@ def main(args):
         record_orig = copy.deepcopy(record)
 
         # Rank deimmunizing variants
-        df_mut = src.deimm.df_fasta_savs_to_df_mut(df_merged, record_orig)
+        df_mut = src.deimm.df_fasta_savs_to_df_mut(df_merged, record_orig, esm_model=args.esm_model)
         df_mut_weighted = src.deimm.weight_df_mut(df_mut)
 
         # Select n per region
@@ -441,7 +442,7 @@ def main(args):
 
         # Re-predict
         records = parse_fasta_records(outfile)
-        
+
         # Predict and save pIRS + scores.csv
         df_fasta = src.processing.parse_records_to_15mer_df(records)
         _, pIRS_files = src.utils.predict_df_fasta(
@@ -474,6 +475,7 @@ def main(args):
             fig = src.plots_pred.plot_deimmunization_plot(
                 df_merged,
                 record,
+                esm_model=args.esm_model,
                 top_n=args.top_n,
                 only_deimmunizing=True,
                 only_immunizing=False,
@@ -486,6 +488,7 @@ def main(args):
             fig = src.plots_pred.plot_deimmunization_plot(
                 df_merged,
                 record,
+                esm_model=args.esm_model,
                 top_n=args.top_n,
                 only_deimmunizing=False,
                 only_immunizing=True,

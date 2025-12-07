@@ -1,11 +1,12 @@
 FROM python:3.9-slim
 WORKDIR /home/biolib/
 
-# Install needed dependencies
-RUN apt-get update && \
-    apt-get install -y python3-pip
+# Put noninteractive
+ENV DEBIAN_FRONTEND=noninteractive
 
-# RUN pip3 install numpy==1.26
+RUN apt-get update && \
+    apt-get install -y --no-install-recommends python3-pip unzip && \
+    rm -rf /var/lib/apt/lists/* /var/cache/apt/archives/*
 
 COPY requirements.txt .
 RUN pip3 install -r requirements.txt
