@@ -1,6 +1,6 @@
 #!/bin/bash
-docker build -t app-immunogenn . 
-docker run --rm -it \
+docker build --platform linux/amd64 -t app-immunogenn . 
+docker run --rm -it  \
      -v $(pwd)/test/:/home/biolib/test/ \
     app-immunogenn /bin/bash
 # docker run --rm -it \
