@@ -28,7 +28,6 @@ def parse_args():
             raise argparse.ArgumentTypeError("Boolean value expected.")
 
     parser = argparse.ArgumentParser(description="Run ImmunoGeNN predictions")
-    parser.add_argument("--mode", default="", type=str, help="Compare")
 
     parser.add_argument(
         "--model_names_str",
