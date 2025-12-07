@@ -73,15 +73,26 @@ def parse_args():
         help="Deimmunize sequence plot",
     )
     parser.add_argument(
+        "--mode",
+        type=str,
+        help="Mode",
+    )
+    parser.add_argument(
+        "--only_immunizing",
+        type=_boolean_string,
+        default="false",
+        help="Immunize sequence plot",
+    )
+    parser.add_argument(
         "--variants_to_generate",
-        default=10,
+        default=30,
         type=int,
         help="Deimmunizing variants to generate",
     )
     parser.add_argument(
         "--ranges_str",
         default="",
-        help="Ranges to deimmunize, e.g. 1-100,200-300. Default empty for all",
+        help="Ranges to de/immunize, e.g. 1-100,200-300. Default empty for all",
     )
     parser.add_argument(
         "--plot_first_n", type=int, default=1, help="Number of sequences to plot"
@@ -236,7 +247,7 @@ def main(args):
     pIRS_files = []
 
     # Option 1) Deimmunize first sequence
-    if args.deimmunize_first_sequence:
+    if args.mode == "deimmunize":
 
         with tqdm(
             total=100,
@@ -397,14 +408,33 @@ def main(args):
             m = (df_mut_weighted['pos'] >= start) & (df_mut_weighted['pos'] <= end)
             df_sub = df_mut_weighted[m]
 
+            # Filter on ESM > 60%
+            df_sub = df_sub[df_sub['esm_rank'] >= 0.60]
+
+            # Filter on only WT > 80%
+            df_sub = df_sub[df_sub['wt_pIRS_rank'] >= 80.0]
+
+            # Filter on delta < 0
+            if args.mode == "deimmunize":
+                df_sub = df_sub[df_sub['delta'] < 0]
+
+            elif args.mode == "immunize":
+                df_sub = df_sub[df_sub['delta'] > 0]
+
+            # Sort by weight
+            df_sub = df_sub.sort_values(by='weight', ascending=True)
+
             print(f"\nDeimmunizing variants in range: {start}-{end} ({df_sub.shape[0]} available mutations)")
-            records = src.deimm.df_mut_weighted_to_fasta_records(df_sub, record, top_n=10)
+            records = src.deimm.df_mut_weighted_to_fasta_records(df_sub, record, top_n=args.variants_to_generate)
             all_records.extend(records)
             #records = src.deimm.df_mut_weighted_to_fasta_records(df_mut_weighted, record_orig, top_n=20)
 
-        outfile = f"{args.outdir}/deimmunized_variants.fasta"
+        if args.mode == "deimmunize":
+            outfile = f"{args.outdir}/deimmunized_variants.fasta"
+        elif args.mode == "immunize":
+            outfile = f"{args.outdir}/immunized_variants.fasta"
         biolib.utils.SeqUtil.write_records_to_fasta(outfile, all_records)
-        print(f"Wrote {len(records)-1} deimmunizing variant sequences to {outfile}")
+        print(f"Wrote {len(records)-1} variant sequences to {outfile}")
 
         if args.skip_plots:
             print("\nDone! Skipping plots as requested (--skip_plots true)\n")
