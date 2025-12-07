@@ -246,7 +246,7 @@ def main(args):
     pIRS_files = []
 
     # Option 1) Deimmunize first sequence
-    if args.mode == "deimmunize":
+    if args.mode == "deimmunize" or args.mode == "immunize":
 
         with tqdm(
             total=100,
@@ -466,17 +466,33 @@ def main(args):
         df_merged.loc[m, "pIRS_rank"] = 0
 
         # Add clickable mutation editor
-        fig = src.plots_pred.plot_deimmunization_plot(
-            df_merged,
-            record,
-            top_n=args.top_n,
-            gene_class="",
-            save=False,
-            width=1100,
-            height=475,
-        )
+        if args.mode == "deimmunize":
+            fig = src.plots_pred.plot_deimmunization_plot(
+                df_merged,
+                record,
+                top_n=args.top_n,
+                only_deimmunizing=True,
+                only_immunizing=False,
+                gene_class="",
+                save=False,
+                width=1100,
+                height=475,
+            )
+        elif args.mode == "immunize":
+            fig = src.plots_pred.plot_deimmunization_plot(
+                df_merged,
+                record,
+                top_n=args.top_n,
+                only_deimmunizing=False,
+                only_immunizing=True,
+                gene_class="",
+                save=False,
+                width=1100,
+                height=475,
+            )
         # plotly_fig_to_html(fig, f"{args.outdir}/SAVs.html", include_plotlyjs=True)
         # print(f"Writing merged SAVs plots to {args.outdir}/SAVs.html")
+
         src.mutation_editor.add_fig_clickable_mutation_editor(fig, record, args.outdir)
         merge_files = [
             f"{args.outdir}/plots.html",
