@@ -28,7 +28,6 @@ def parse_args():
             raise argparse.ArgumentTypeError("Boolean value expected.")
 
     parser = argparse.ArgumentParser(description="Run ImmunoGeNN predictions")
-    parser.add_argument("--mode", default="", type=str, help="Compare")
 
     parser.add_argument(
         "--model_names_str",
@@ -73,15 +72,26 @@ def parse_args():
         help="Deimmunize sequence plot",
     )
     parser.add_argument(
+        "--mode",
+        type=str,
+        help="Mode",
+    )
+    parser.add_argument(
+        "--only_immunizing",
+        type=_boolean_string,
+        default="false",
+        help="Immunize sequence plot",
+    )
+    parser.add_argument(
         "--variants_to_generate",
-        default=10,
+        default=30,
         type=int,
         help="Deimmunizing variants to generate",
     )
     parser.add_argument(
         "--ranges_str",
         default="",
-        help="Ranges to deimmunize, e.g. 1-100,200-300. Default empty for all",
+        help="Ranges to de/immunize, e.g. 1-100,200-300. Default empty for all",
     )
     parser.add_argument(
         "--plot_first_n", type=int, default=1, help="Number of sequences to plot"
@@ -236,7 +246,7 @@ def main(args):
     pIRS_files = []
 
     # Option 1) Deimmunize first sequence
-    if args.deimmunize_first_sequence:
+    if args.mode == "deimmunize" or args.mode == "immunize":
 
         with tqdm(
             total=100,
@@ -397,14 +407,33 @@ def main(args):
             m = (df_mut_weighted['pos'] >= start) & (df_mut_weighted['pos'] <= end)
             df_sub = df_mut_weighted[m]
 
-            print(f"\nDeimmunizing variants in range: {start}-{end} ({df_sub.shape[0]} available mutations)")
-            records = src.deimm.df_mut_weighted_to_fasta_records(df_sub, record, top_n=10)
+            # Filter on ESM > 60%
+            df_sub = df_sub[df_sub['esm_rank'] >= 0.60]
+
+            # Filter on only WT > 80%
+            df_sub = df_sub[df_sub['wt_pIRS_rank'] >= 80.0]
+
+            # Filter on delta < 0
+            if args.mode == "deimmunize":
+                df_sub = df_sub[df_sub['delta'] < 0]
+                df_sub = df_sub.sort_values(by='weight', ascending=True)
+                print(f"\nDeimmunizing variants in range: {start}-{end} ({df_sub.shape[0]} available mutations)")
+
+            elif args.mode == "immunize":
+                df_sub = df_sub[df_sub['delta'] > 0]
+                df_sub = df_sub.sort_values(by='weight', ascending=False)
+                print(f"\Immunizing variants in range: {start}-{end} ({df_sub.shape[0]} available mutations)")
+
+            records = src.deimm.df_mut_weighted_to_fasta_records(df_sub, record, top_n=args.variants_to_generate)
             all_records.extend(records)
             #records = src.deimm.df_mut_weighted_to_fasta_records(df_mut_weighted, record_orig, top_n=20)
 
-        outfile = f"{args.outdir}/deimmunized_variants.fasta"
+        if args.mode == "deimmunize":
+            outfile = f"{args.outdir}/deimmunized_variants.fasta"
+        elif args.mode == "immunize":
+            outfile = f"{args.outdir}/immunized_variants.fasta"
         biolib.utils.SeqUtil.write_records_to_fasta(outfile, all_records)
-        print(f"Wrote {len(records)-1} deimmunizing variant sequences to {outfile}")
+        print(f"Wrote {len(records)-1} variant sequences to {outfile}")
 
         if args.skip_plots:
             print("\nDone! Skipping plots as requested (--skip_plots true)\n")
@@ -412,6 +441,7 @@ def main(args):
 
         # Re-predict
         records = parse_fasta_records(outfile)
+        
         # Predict and save pIRS + scores.csv
         df_fasta = src.processing.parse_records_to_15mer_df(records)
         _, pIRS_files = src.utils.predict_df_fasta(
@@ -423,7 +453,10 @@ def main(args):
             save=True,
         )
 
+        # Write scores.csv
         df_merged2 = src.utils.merge_all_gene_pIRS_files(pIRS_files)
+        src.utils.save_df_fasta_to_pIRS_scores_csv(df_merged2, args.outdir, save=True)
+
         plot_all_sequences_merged(
             df_merged2,
             gene_class="",
@@ -437,17 +470,33 @@ def main(args):
         df_merged.loc[m, "pIRS_rank"] = 0
 
         # Add clickable mutation editor
-        fig = src.plots_pred.plot_deimmunization_plot(
-            df_merged,
-            record,
-            top_n=args.top_n,
-            gene_class="",
-            save=False,
-            width=1100,
-            height=475,
-        )
+        if args.mode == "deimmunize":
+            fig = src.plots_pred.plot_deimmunization_plot(
+                df_merged,
+                record,
+                top_n=args.top_n,
+                only_deimmunizing=True,
+                only_immunizing=False,
+                gene_class="",
+                save=False,
+                width=1100,
+                height=475,
+            )
+        elif args.mode == "immunize":
+            fig = src.plots_pred.plot_deimmunization_plot(
+                df_merged,
+                record,
+                top_n=args.top_n,
+                only_deimmunizing=False,
+                only_immunizing=True,
+                gene_class="",
+                save=False,
+                width=1100,
+                height=475,
+            )
         # plotly_fig_to_html(fig, f"{args.outdir}/SAVs.html", include_plotlyjs=True)
         # print(f"Writing merged SAVs plots to {args.outdir}/SAVs.html")
+
         src.mutation_editor.add_fig_clickable_mutation_editor(fig, record, args.outdir)
         merge_files = [
             f"{args.outdir}/plots.html",

@@ -70,17 +70,10 @@ def df_fasta_savs_to_df_mut(df_fasta_savs, record, esm_model="esm2_t6_8M_UR50D")
     df_mut = pd.DataFrame.from_dict(mut_dict, orient="index")
     return df_mut
 
-def weight_df_mut(df_mut, only_deimmunizing=True):
+def weight_df_mut(df_mut):
     df_out_rank = df_mut.copy()
     df_out_rank["esm_rank"] = df_out_rank["esm"].rank(pct=True)
     df_out_rank["weight"] = df_out_rank["delta"] * (df_out_rank["esm_rank"]**2)
-
-    # Sort
-    df_out_rank = df_out_rank.sort_values(by="weight", ascending=True)
-
-    # Only deimmunizing
-    if only_deimmunizing:
-        df_out_rank = df_out_rank[df_out_rank["delta"] < 0]
 
     return df_out_rank
 

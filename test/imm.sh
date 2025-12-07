@@ -1,3 +1,3 @@
 python3 run.py \
     --outdir output \
-    --mode "deimmunize"
+    --mode "immunize"

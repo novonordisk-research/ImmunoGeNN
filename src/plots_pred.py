@@ -26,7 +26,8 @@ def plot_deimmunization_plot(
     top_n_esm=-1,
     esm_model="esm2_t6_8M_UR50D",
     remove_cysteines=False,
-    only_deimmunizing=True,
+    only_deimmunizing=False,
+    only_immunizing=False,
     width=1000,
     height=475,
     save=True,
@@ -59,17 +60,6 @@ def plot_deimmunization_plot(
     # Drop cols
     df_out = df_out.drop(columns=["X"])
 
-    # for i in range(len(df_heatmap)):
-    #     row = df_heatmap.iloc[i]
-    #     wt_score = row.loc[row.name]
-
-    #     order = np.argsort(row.values)
-    #     max_v = min(row[order[top_n]], wt_score)
-    #     m1 = row >= max_v
-    #     m2 = row.index != row.name
-    #     mc = (m1 & m2)
-    #     df_heatmap.iloc[i, mc] = -1
-
     if only_deimmunizing and top_n < 20:
         print(f"Only showing top {top_n} deimmunizing mutations")
         for i in range(len(df_heatmap)):
@@ -77,6 +67,7 @@ def plot_deimmunization_plot(
             wt_score = row.loc[row.name]
 
             order = np.argsort(row.values)
+
             # Use .iloc for positional access to avoid FutureWarning
             threshold_pos = order[top_n]
             threshold_value = row.iloc[threshold_pos]
@@ -87,16 +78,18 @@ def plot_deimmunization_plot(
             mc = m1 & m2
             df_heatmap.iloc[i, mc] = -1
 
+
     # Plot SAVs + ESM plot
     # df_heatmap_filtered = df_heatmap.copy()
     seq_df_probs = src.utils.get_seq_esm_LLR_dataframe(record.sequence, esm_model)
     seq_df_probs_top_n = src.utils.get_logprobs_top_residues(seq_df_probs, n=top_n_esm)
 
     # Mask below top n
-    for i2 in range(len(seq_df_probs_top_n)):
-        top_n_aas = seq_df_probs_top_n.iloc[i2].values
-        mask = ~df_heatmap.columns.isin(top_n_aas)
-        df_heatmap.iloc[i2, mask] = -1
+    if only_deimmunizing:
+        for i2 in range(len(seq_df_probs_top_n)):
+            top_n_aas = seq_df_probs_top_n.iloc[i2].values
+            mask = ~df_heatmap.columns.isin(top_n_aas)
+            df_heatmap.iloc[i2, mask] = -1
 
     # Only show top 10 deimmunizing mutations
     # m = np.argsort(-df_heatmap, axis=1) > top_n
@@ -116,8 +109,11 @@ def plot_deimmunization_plot(
     )
 
     N_variants = len(df_fasta_savs)
+    
     title = f"Top {top_n} deimmunizing variants across {record.id} (of {N_variants:,} screened)<br><sup>(Maximum peptide score for given residue mutation)</sup>"
-    # title2 = f"Maximum residue score after screening {N_mutations} possible deimmunizing mutations in {record.id}<br><sup>(Maximum peptide score for given residue mutation)</sup>""
+    if only_immunizing:
+        title = f"Top {top_n} immunizing variants across {record.id} (of {N_variants:,} screened)<br><sup>(Maximum peptide score for given residue mutation)</sup>"
+
     if gene_class:
         title = f"{gene_class} " + title
 
@@ -133,6 +129,7 @@ def plot_df_heatmap_deimmunizing_mutations(
     df_heatmap_esm=False,
     name="the sequence",
     remove_cysteines=False,
+    deimmunize_only=False,
     cmap_name="tab20_r",
     y_min=-0.1,
     y_max=1.1,
@@ -164,15 +161,17 @@ def plot_df_heatmap_deimmunizing_mutations(
         df_heatmap.loc[mask, "C"] = -1.00
 
     # Process
-    df_melted = process_heatmap(df_heatmap, seq)
+    if deimmunize_only:
+        df_melted = process_heatmap(df_heatmap, seq, score_below_n_to_nan=True)
+        df_melted_rank = process_heatmap(df_heatmap_rank, seq, score_below_n_to_nan=True)
+    else:
+        df_melted = process_heatmap(df_heatmap, seq)
+        df_melted_rank = process_heatmap(df_heatmap_rank, seq)
 
-    # Hack: Always negative values
-    df_melted["Delta"] = df_melted["Delta"].abs()
-    df_melted["Delta"] = df_melted["Delta"] * 100
+        # Hack: Always negative values
+        df_melted["Delta"] = df_melted["Delta"].abs()
+        df_melted["Delta"] = df_melted["Delta"] * 100
 
-    # Add rank percentiles
-    df_melted_rank = process_heatmap(df_heatmap_rank, seq)
-    # df_melted_rank = df_melted_rank * 100
 
     # Hack: Removing missing values
     m1 = df_melted.isna().sum(axis=1) > 1
@@ -387,7 +386,8 @@ def create_custom_colormap(cmap_name, amino_acids):
 
 
 def process_heatmap(
-    df_heatmap, seq, score_below_n_to_nan=-0.99, scores_below_wt_to_nan=True
+    df_heatmap, seq, scores_below_wt_to_nan=False,
+    score_below_n_to_nan=-0.99,
 ):
     """
     Process the heatmap DataFrame by clipping values based on sequence length
