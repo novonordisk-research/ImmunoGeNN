@@ -69,7 +69,7 @@ def parse_args():
         "--mode",
         type=str,
         help="Mode",
-        options=["screen", "deimmunize", "immunize"],
+        choices=["screen", "deimmunize", "immunize"],
     )
     parser.add_argument(
         "--variants_to_generate",
@@ -99,8 +99,8 @@ def parse_args():
     )
     parser.add_argument("--top_n", type=int, default=20, help="ESM variants to show")
     parser.add_argument(
-        #"--esm_model", type=str, default="esm2_t6_8M_UR50D", help="ESM model to use"
-        "--esm_model", type=str, default="esm2_t33_650M_UR50D", help="ESM model to use"
+        "--esm_model", type=str, default="esm2_t6_8M_UR50D", help="ESM model to use"
+        #"--esm_model", type=str, default="esm2_t33_650M_UR50D", help="ESM model to use"
     )
     parser.add_argument(
         "--tsv_file",

@@ -1,6 +1,7 @@
 #!/bin/bash
 docker build -t app-immunogenn . 
 docker run --rm -it \
+     -v $(pwd)/test/:/home/biolib/test/ \
     app-immunogenn /bin/bash
 # docker run --rm -it \
 #     -v $(pwd)/test/:/home/biolib/test/ \
