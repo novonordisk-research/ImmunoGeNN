@@ -36,14 +36,20 @@ python run.py --fasta_file \
 ```
 
 **Deimmunize first sequence**
-```python3
+```bash
+# Optional: Install ESM2 requirements
+# pip install -r requirements_esm.txt
+
 python run.py \
     --fasta_file data/input.fasta \
     --mode deimmunize
 ```
 
 **Immunize first sequence**
-```python3
+```bash
+# Optional: Install ESM2 requirements
+# pip install -r requirements_esm.txt
+
 python run.py \
     --fasta_file data/input.fasta \
     --mode immunize

@@ -8,6 +8,12 @@ RUN apt-get update && \
     apt-get install -y --no-install-recommends python3-pip unzip && \
     rm -rf /var/lib/apt/lists/* /var/cache/apt/archives/*
 
+# Torch requirements
+COPY requirements_esm.txt .
+RUN pip3 install --no-cache-dir --extra-index-url https://download.pytorch.org/whl/cpu -r requirements_esm.txt && \
+    rm -rf /root/.cache/pip
+
+# General requirements
 COPY requirements.txt .
 RUN pip3 install -r requirements.txt && \
     rm -rf /root/.cache/pip
