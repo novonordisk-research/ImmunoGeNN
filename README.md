@@ -18,7 +18,7 @@ __Web-servers and code:__
 
 ## Quick start
 
-Download and install:
+**Download and install:**
 ```bash
 git clone https://github.com/novonordisk-research/ImmunoGeNN && cd ImmunoGeNN
 
@@ -27,13 +27,24 @@ unzip data_record.zip
 
 # Install requirements
 pip install -r requirements.txt
-```
 
-**Screen protein sequences for predicted immunogenicity risk in global population (pIRS)**
-```python3
+# Screen protein sequences for predicted immunogenicity risk in global population (pIRS)
 python run.py --fasta_file \
     data/input.fasta
 ```
+
+----
+
+### Input format
+- **Input FASTA** - Input FASTA file of proteins sequences (minimum sequence length of 15 residues)
+- **Human reference filtering** - Screens peptide (9mer) binding cores against the human proteome, and assings pIRS=0 if found.
+- **Extra references** - Optionally, provide extra reference proteomes in FASTA format to screen against (e.g. known self-proteins)
+
+Modes:
+- **Screening mode** - Predicts pIRS scores for all input sequences
+- **Deimmunization mode** - Screens all single amino acid variants (SAVs) in the specified ranges for the first input sequence for predicted pIRS. Generates FASTA and scores.csv file for the top n deimmunizing variants (sorted by ranked pIRS x ranked ESM2 likelihood^2)
+- **Immunization mode** - Same as above, for variants increasing pIRS.
+
 
 **Deimmunize first sequence**
 ```bash
@@ -54,18 +65,6 @@ python run.py \
     --fasta_file data/input.fasta \
     --mode immunize
 ```
-
-----
-
-### Input format
-- **Input FASTA** - Input FASTA file of proteins sequences (minimum sequence length of 15 residues)
-- **Human reference filtering** - Screens peptide (9mer) binding cores against the human proteome, and assings pIRS=0 if found.
-- **Extra references** - Optionally, provide extra reference proteomes in FASTA format to screen against (e.g. known self-proteins)
-
-Modes:
-- **Screening mode** - Predicts pIRS scores for all input sequences
-- **Deimmunization mode** - Screens all single amino acid variants (SAVs) in the specified ranges for the first input sequence for predicted pIRS. Generates FASTA and scores.csv file for the top n deimmunizing variants (sorted by ranked pIRS x ranked ESM2 likelihood^2)
-- **Immunization mode** - Same as above, for variants increasing pIRS.
 
 ### Output format
 
