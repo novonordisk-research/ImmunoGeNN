@@ -104,6 +104,7 @@ def plot_deimmunization_plot(
         record.sequence,
         df_heatmap_esm=df_heatmap_esm,
         name=record.id,
+        deimmunize_only=only_deimmunizing,
         remove_cysteines=remove_cysteines,
         cmap_name="viridis_r",
         width=width,
