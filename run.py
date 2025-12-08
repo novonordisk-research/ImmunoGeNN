@@ -543,7 +543,8 @@ if __name__ == "__main__":
     args = parse_args()
 
     # Set BioLib job name (if running on BioLib platform)
-    biolib.sdk.Runtime.set_result_name_from_file(args.fasta_file)
+    if biolib.sdk.Runtime.check_is_environment_biolib_app():
+        biolib.sdk.Runtime.set_result_name_from_file(args.fasta_file)
 
     # Run main
     main(args)
