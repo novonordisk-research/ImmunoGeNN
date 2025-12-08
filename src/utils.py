@@ -7,8 +7,6 @@ import biolib
 import lz4.frame
 import numpy as np
 import pandas as pd
-import torch
-import torch.nn.functional as F
 
 import src.processing
 from bs4 import BeautifulSoup
@@ -424,6 +422,8 @@ def get_seq_esm_LLR_dataframe(sequence, esm_model="esm2_t6_8M_UR50D", verbose=Tr
         print(f"Loading ESM-2 model {esm_model} ...")
 
     # Load the pretrained model and its alphabet for the specified model version
+    import torch
+    import torch.nn.functional as F
     import esm.pretrained
     model, alphabet = esm.pretrained.load_model_and_alphabet(esm_model)
     batch_converter = alphabet.get_batch_converter()
@@ -453,13 +453,6 @@ def get_seq_esm_LLR_dataframe(sequence, esm_model="esm2_t6_8M_UR50D", verbose=Tr
 
     amino_acids = list("CWGMPSTDLEFQNAHVYRIKX")
     df = df[amino_acids]
-
-    # Show as LLR versus WT
-    # for i in range(len(df)):
-    #     row = df.iloc[i]
-    #     wt_aa = row.name
-    #     LLR = (row - row[wt_aa]).values
-    #     df.iloc[i] = LLR
 
     return df
 

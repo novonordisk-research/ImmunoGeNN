@@ -5,3 +5,4 @@ output/
 __pycache__/
 _old/
 _dev/
+.DS_Store

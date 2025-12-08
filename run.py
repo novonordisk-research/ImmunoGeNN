@@ -63,30 +63,31 @@ def parse_args():
         help="Skips plots if set to true",
     )
     parser.add_argument(
-        "--threshold", type=float, default=0.040, help="Threshold for plotting"
-    )
-    parser.add_argument(
-        "--deimmunize_first_sequence",
-        type=_boolean_string,
-        default="false",
-        help="Deimmunize sequence plot",
-    )
+        "--threshold",type=float, default=0.040, help="Threshold for plotting"
+    ) 
     parser.add_argument(
         "--mode",
         type=str,
         help="Mode",
-    )
-    parser.add_argument(
-        "--only_immunizing",
-        type=_boolean_string,
-        default="false",
-        help="Immunize sequence plot",
+        choices=["screen", "deimmunize", "immunize"],
     )
     parser.add_argument(
         "--variants_to_generate",
         default=30,
         type=int,
-        help="Deimmunizing variants to generate",
+        help="De/immunizing variants to generate",
+    )
+    parser.add_argument(
+        "--filter_variant_esm_rank",
+        default=60.0,
+        type=float,
+        help="ESM rank threshold for de/immunizing variants (0.0 - 100.0%)",
+    )
+    parser.add_argument(
+        "--filter_variant_pirs_rank",
+        default=80.0,
+        type=float,
+        help="pIRS rank threshold for de/immunizing variants (0.0 - 100.0%)",
     )
     parser.add_argument(
         "--ranges_str",
@@ -99,6 +100,7 @@ def parse_args():
     parser.add_argument("--top_n", type=int, default=20, help="ESM variants to show")
     parser.add_argument(
         "--esm_model", type=str, default="esm2_t6_8M_UR50D", help="ESM model to use"
+        #"--esm_model", type=str, default="esm2_t33_650M_UR50D", help="ESM model to use"
     )
     parser.add_argument(
         "--tsv_file",
@@ -255,6 +257,7 @@ def main(args):
 
             record = records[0]
             N_variants = (len(record.sequence) - 14) * 20 * 15
+
             # Thousand separator
             pbar.set_description(
                 f"Screening {N_variants:,} possible deimmunizing mutations in {record.id} ..."
@@ -397,7 +400,7 @@ def main(args):
         record_orig = copy.deepcopy(record)
 
         # Rank deimmunizing variants
-        df_mut = src.deimm.df_fasta_savs_to_df_mut(df_merged, record_orig)
+        df_mut = src.deimm.df_fasta_savs_to_df_mut(df_merged, record_orig, esm_model=args.esm_model)
         df_mut_weighted = src.deimm.weight_df_mut(df_mut)
 
         # Select n per region
@@ -408,15 +411,20 @@ def main(args):
             df_sub = df_mut_weighted[m]
 
             # Filter on ESM > 60%
-            df_sub = df_sub[df_sub['esm_rank'] >= 0.60]
+            t_esm_rank = float(args.filter_variant_esm_rank / 100.0)
+            df_sub = df_sub[df_sub['esm_rank'] >= t_esm_rank]
 
-            # Filter on delta < 0
+            # Filter on only WT > 80%
+            df_sub = df_sub[df_sub['wt_pIRS_rank'] >= args.filter_variant_pirs_rank]
+
+            # Filter on delta < 0 (deimmunizing)
             if args.mode == "deimmunize":
                 df_sub = df_sub[df_sub['wt_pIRS_rank'] >= 80.0]
                 df_sub = df_sub[df_sub['delta'] < 0]
                 df_sub = df_sub.sort_values(by='weight', ascending=True)
                 print(f"\nDeimmunizing variants in range: {start}-{end} ({df_sub.shape[0]} available mutations)")
 
+            # Filter on delta > 0 (immunizing)
             elif args.mode == "immunize":
                 df_sub = df_sub[df_sub['delta'] > 0]
                 df_sub = df_sub.sort_values(by='weight', ascending=False)
@@ -424,12 +432,12 @@ def main(args):
 
             records = src.deimm.df_mut_weighted_to_fasta_records(df_sub, record, top_n=args.variants_to_generate)
             all_records.extend(records)
-            #records = src.deimm.df_mut_weighted_to_fasta_records(df_mut_weighted, record_orig, top_n=20)
 
         if args.mode == "deimmunize":
             outfile = f"{args.outdir}/deimmunized_variants.fasta"
         elif args.mode == "immunize":
             outfile = f"{args.outdir}/immunized_variants.fasta"
+
         biolib.utils.SeqUtil.write_records_to_fasta(outfile, all_records)
         print(f"Wrote {len(records)-1} variant sequences to {outfile}")
 
@@ -439,7 +447,7 @@ def main(args):
 
         # Re-predict
         records = parse_fasta_records(outfile)
-        
+
         # Predict and save pIRS + scores.csv
         df_fasta = src.processing.parse_records_to_15mer_df(records)
         _, pIRS_files = src.utils.predict_df_fasta(
@@ -472,9 +480,9 @@ def main(args):
             fig = src.plots_pred.plot_deimmunization_plot(
                 df_merged,
                 record,
+                esm_model=args.esm_model,
                 top_n=args.top_n,
                 only_deimmunizing=True,
-                only_immunizing=False,
                 gene_class="",
                 save=False,
                 width=1100,
@@ -484,16 +492,14 @@ def main(args):
             fig = src.plots_pred.plot_deimmunization_plot(
                 df_merged,
                 record,
+                esm_model=args.esm_model,
                 top_n=args.top_n,
-                only_deimmunizing=False,
                 only_immunizing=True,
                 gene_class="",
                 save=False,
                 width=1100,
                 height=475,
             )
-        # plotly_fig_to_html(fig, f"{args.outdir}/SAVs.html", include_plotlyjs=True)
-        # print(f"Writing merged SAVs plots to {args.outdir}/SAVs.html")
 
         src.mutation_editor.add_fig_clickable_mutation_editor(fig, record, args.outdir)
         merge_files = [
@@ -506,7 +512,6 @@ def main(args):
             remove=False,
             verbose=args.verbose,
         )
-        #os.remove(f"{args.outdir}/mutation_editor.html")
 
         print(f"\nPlots saved to {args.outdir}/plots.html")
 
@@ -537,7 +542,8 @@ if __name__ == "__main__":
     args = parse_args()
 
     # Set BioLib job name (if running on BioLib platform)
-    biolib.sdk.Runtime.set_result_name_from_file(args.fasta_file)
+    if biolib.sdk.Runtime.check_is_environment_biolib_app():
+        biolib.sdk.Runtime.set_result_name_from_file(args.fasta_file)
 
     # Run main
     main(args)

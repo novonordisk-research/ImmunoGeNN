@@ -28,8 +28,15 @@ def df_fasta_savs_to_df_mut(df_fasta_savs, record, esm_model="esm2_t6_8M_UR50D")
 
     # Plot SAVs + ESM plot
     # df_heatmap_filtered = df_heatmap.copy()
-    df_heatmap_esm = src.utils.get_seq_esm_LLR_dataframe(record.sequence, esm_model=esm_model)
-    df_heatmap_esm_norm = pd.Series(df_heatmap_esm.values.flatten()).rank(pct=True).values.reshape(df_heatmap_esm.shape)
+    try:
+        df_heatmap_esm = src.utils.get_seq_esm_LLR_dataframe(record.sequence, esm_model=esm_model)
+    except Exception as e:
+        print(f"Unable to generate ESM2 likelihoods. Try installing ESM requirements with 'pip install -r requirements_esm.txt'.")
+        print(f"Exception details:", e)
+        print(f"Falling back to zero ESM2 likelihoods.")
+        df_heatmap_esm = pd.DataFrame(0, index=df_heatmap.index, columns=df_heatmap.columns)
+
+    # df_heatmap_esm_norm = pd.Series(df_heatmap_esm.values.flatten()).rank(pct=True).values.reshape(df_heatmap_esm.shape)
 
     mut_dict = {}
     for i in range(len(df_heatmap)):

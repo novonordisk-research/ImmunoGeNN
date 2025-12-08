@@ -1,0 +1,2 @@
+fair-esm==2.*
+torch==2.6
