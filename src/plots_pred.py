@@ -81,26 +81,28 @@ def plot_deimmunization_plot(
 
     # Plot SAVs + ESM plot
     # df_heatmap_filtered = df_heatmap.copy()
-    seq_df_probs = src.utils.get_seq_esm_LLR_dataframe(record.sequence, esm_model=esm_model)
-    seq_df_probs_top_n = src.utils.get_logprobs_top_residues(seq_df_probs, n=top_n_esm)
+    try:
+        df_heatmap_esm = src.utils.get_seq_esm_LLR_dataframe(record.sequence, esm_model=esm_model)
+        df_heatmap_esm_top_n = src.utils.get_logprobs_top_residues(df_heatmap_esm, n=top_n_esm)
 
-    # Mask below top n
-    if only_deimmunizing:
-        for i2 in range(len(seq_df_probs_top_n)):
-            top_n_aas = seq_df_probs_top_n.iloc[i2].values
+        # Mask below top n
+        for i2 in range(len(df_heatmap_esm_top_n)):
+            top_n_aas = df_heatmap_esm_top_n.iloc[i2].values
             mask = ~df_heatmap.columns.isin(top_n_aas)
             df_heatmap.iloc[i2, mask] = -1
 
-    # Only show top 10 deimmunizing mutations
-    # m = np.argsort(-df_heatmap, axis=1) > top_n
-    # df_heatmap[m] = -1
+    except Exception as e:
+        print(f"Unable to generate ESM2 likelihoods. Try installing ESM requirements with 'pip install -r requirements_esm.txt'.")
+        print(f"Exception details:", e)
+        print(f"Falling back to zero ESM2 likelihoods.")
+        df_heatmap_esm = False
 
     # Plot only ESM suggested mutations
     fig = plot_df_heatmap_deimmunizing_mutations(
         df_heatmap,
         df_heatmap_rank,
         record.sequence,
-        seq_df_probs,
+        df_heatmap_esm=df_heatmap_esm,
         name=record.id,
         remove_cysteines=remove_cysteines,
         cmap_name="viridis_r",

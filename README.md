@@ -1,11 +1,5 @@
 ## ImmunoGeNN
-ImmunoGeNN accepts input protein sequences and predicts peptide MHC-II immunogenicity risk scores (pIRS) based on allele frequencies in the global population. It predicts risk scores at over 3 orders of magnitude the rate of NetMHCIIpan-4.3, while sharing a >95% Spearman R correlation on the NetMHCIIpan-4.3 test set and ~47% with experimentally presented peptides (MAPPs).
-
-- [Pre-print](https://openreview.net/forum?id=kOJQm9YXnB)
-- [GitHub repository](https://github.com/novonordisk-research/ImmunoGeNN)
-- [Biolib web-server](https://biolib.com/DTU/ImmunoGeNN)
-- [DTU Health web-server](https://services.healthtech.dtu.dk/services/ImmunoGeNN/)
-
+ImmunoGeNN accepts input protein sequences and predicts peptide MHC-II immunogenicity risk scores (pIRS) based on allele frequencies in the global population. It predicts risk scores at over 3 orders of magnitude the rate of NetMHCIIpan-4.3, while sharing a >95% Spearman R correlation on the NetMHCIIpan-4.3 test set and ~47% with experimentally presented peptides (MAPPs). Read more in our [EurIPS 2025 SIMBIOCHEM workshop paper](https://openreview.net/forum?id=kOJQm9YXnB).
 
 Example FASTA input:
 ```
@@ -13,6 +7,46 @@ Example FASTA input:
 MQLYLVLLLISYLLTPIGASILGRCTVAKMLYDGGLNYFEGYSLENWVCLAYFESKFNPS
 AVYEDPQDGSTGFGLFQIRDNEWCGHGKNLCSVSCTALLNPNLKDTIQCAKKIVKGKHGM
 GAWPIWSKNCQLSDVLDRWLDGCDL
+```
+
+
+__Web-servers and code:__
+- [Biolib web-server](https://biolib.com/DTU/ImmunoGeNN)
+- [DTU Health web-server](https://services.healthtech.dtu.dk/services/ImmunoGeNN/)
+- [GitHub repository](https://github.com/novonordisk-research/ImmunoGeNN)
+
+
+## Quick start
+
+Download and install:
+```bash
+git clone https://github.com/novonordisk-research/ImmunoGeNN && cd ImmunoGeNN
+
+# Unzip human reference data
+unzip data_record.zip
+
+# Install requirements
+pip install -r requirements.txt
+```
+
+**Screen protein sequences for predicted immunogenicity risk in global population (pIRS)**
+```python3
+python run.py --fasta_file \
+    data/input.fasta
+```
+
+**Deimmunize first sequence**
+```python3
+python run.py \
+    --fasta_file data/input.fasta \
+    --mode deimmunize
+```
+
+**Immunize first sequence**
+```python3
+python run.py \
+    --fasta_file data/input.fasta \
+    --mode immunize
 ```
 
 ----
@@ -66,29 +100,6 @@ design3,Global,5.13089
 
 ----
 
-### Download and run locally
-
-Installation:
-```
-git clone https://github.com/novonordisk-research/ImmunoGeNN
-cd ImmunoGeNN
-unzip data_record.zip
-
-pip install -r requirements.txt
-```
-
-Predicting protein immunogenicity risk scores:
-```
-python run.py --fasta_file \
-    data/input.fasta
-```
-
-Deimmunizing first protein sequence:
-```
-python run.py \
-    --fasta_file data/input.fasta \
-    --deimmunize_first_sequence true
-```
 
 ### Docker setup
 Build Docker image:

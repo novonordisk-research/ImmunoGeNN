@@ -454,13 +454,6 @@ def get_seq_esm_LLR_dataframe(sequence, esm_model="esm2_t6_8M_UR50D", verbose=Tr
     amino_acids = list("CWGMPSTDLEFQNAHVYRIKX")
     df = df[amino_acids]
 
-    # Show as LLR versus WT
-    # for i in range(len(df)):
-    #     row = df.iloc[i]
-    #     wt_aa = row.name
-    #     LLR = (row - row[wt_aa]).values
-    #     df.iloc[i] = LLR
-
     return df
 
 
