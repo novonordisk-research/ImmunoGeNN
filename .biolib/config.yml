@@ -29,14 +29,14 @@ arguments:
 
     -
         key: "--mode"
-        description: "Select mode"
+        description: "Screen for immunizing/deimmunizing variants in first sequence"
         default_value: "screen"
         required: false
         type: radio
         options:
-            'Screening': 'screen'
-            'Deimmunization': 'deimmunize'
-            'Immunization': 'immunize'
+            'No': 'screen'
+            'Immunize': 'immunize'
+            'Deimmunize': 'deimmunize'
         
         sub_arguments:
 

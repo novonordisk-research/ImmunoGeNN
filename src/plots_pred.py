@@ -60,7 +60,8 @@ def plot_deimmunization_plot(
     # Drop cols
     df_out = df_out.drop(columns=["X"])
 
-    if only_deimmunizing and top_n < 20:
+    #if only_deimmunizing and top_n < 20:
+    if only_deimmunizing:
         print(f"Only showing top {top_n} deimmunizing mutations")
         for i in range(len(df_heatmap)):
             row = df_heatmap.iloc[i]
@@ -165,8 +166,8 @@ def plot_df_heatmap_deimmunizing_mutations(
 
     # Process
     if deimmunize_only:
-        df_melted = process_heatmap(df_heatmap, seq, score_below_n_to_nan=True)
-        df_melted_rank = process_heatmap(df_heatmap_rank, seq, score_below_n_to_nan=True)
+        df_melted = process_heatmap(df_heatmap, seq, score_below_n_to_nan=False, scores_below_wt_to_nan=True)
+        df_melted_rank = process_heatmap(df_heatmap_rank, seq, score_below_n_to_nan=False, scores_below_wt_to_nan=True)
     else:
         df_melted = process_heatmap(df_heatmap, seq)
         df_melted_rank = process_heatmap(df_heatmap_rank, seq)
@@ -389,7 +390,8 @@ def create_custom_colormap(cmap_name, amino_acids):
 
 
 def process_heatmap(
-    df_heatmap, seq, scores_below_wt_to_nan=False,
+    df_heatmap, seq,
+    scores_below_wt_to_nan=False,
     score_below_n_to_nan=-0.99,
 ):
     """
@@ -436,12 +438,6 @@ def process_heatmap(
         index=indices,
     )
     df_plot = df_plot.astype(float)
-
-    # If 15mer cap values at 0.00-0.10, otherwise to 0.08
-    # if len(seq) == 15:
-    #     df_plot = df_plot.clip(upper=0.11)
-    # else:
-    #     df_plot = df_plot.clip(upper=0.075)
 
     # Only show values below the wildtype score
     if scores_below_wt_to_nan:
