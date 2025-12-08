@@ -9,12 +9,10 @@ AVYEDPQDGSTGFGLFQIRDNEWCGHGKNLCSVSCTALLNPNLKDTIQCAKKIVKGKHGM
 GAWPIWSKNCQLSDVLDRWLDGCDL
 ```
 
-
 __Web-servers and code:__
 - [Biolib web-server](https://biolib.com/DTU/ImmunoGeNN)
 - [DTU Health web-server](https://services.healthtech.dtu.dk/services/ImmunoGeNN/)
 - [GitHub repository](https://github.com/novonordisk-research/ImmunoGeNN)
-
 
 ## Quick start
 
@@ -105,7 +103,6 @@ design3,Global,5.13089
 
 ----
 
-
 ### Docker setup
 Build Docker image:
 ```
@@ -117,10 +114,6 @@ Run Docker container:
 docker run -v $(pwd)/data:/app/data -it app-immunogenn \
     python run.py --fasta_file data/input.fasta
 ```
-
-### Speed benchmark
-
-![img/runtime.png](img/runtime.png)
 
 ----
 
