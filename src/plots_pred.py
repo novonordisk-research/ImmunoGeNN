@@ -45,8 +45,7 @@ def df_savs_to_heatmap_pirs_esm(df_savs):
 
 
 
-
-def create_savs_heatmap(df_savs, name="protein1", vmin=60, vmax=100, esm_threshold=60, width=1050, height=600):
+def create_savs_heatmap(df_savs, name="protein1", vmin=50, vmax=100, esm_threshold=60, width=950, height=600):
 
     # Heatmaps
     heatmap_arr, heatmap_arr_esm = df_savs_to_heatmap_pirs_esm(df_savs)
@@ -155,7 +154,7 @@ def create_savs_heatmap(df_savs, name="protein1", vmin=60, vmax=100, esm_thresho
                             # Update traces: show WT, hide pIRS, show ESM
                             {"visible": [True, False, True], "showscale": [False, False, True]},
                             # Update layout: update title and hide this button, show the other
-                            {"title_text": f'Variant immunogenicity heatmap across {name}',
+                            {"title_text": f'Immunogenicity heatmap across variants in {name}',
                              "updatemenus[0].visible": False,
                              "updatemenus[1].visible": True}
                         ]
@@ -180,7 +179,7 @@ def create_savs_heatmap(df_savs, name="protein1", vmin=60, vmax=100, esm_thresho
                             # Update traces: show WT, show pIRS, hide ESM
                             {"visible": [True, True, False], "showscale": [False, True, False]},
                             # Update layout: update title and hide this button, show the other
-                            {"title_text": f'Variant immunogenicity heatmap across {name}',
+                            {"title_text": f'Immunogenicity heatmap across variants in {name}',
                              "updatemenus[0].visible": True,
                              "updatemenus[1].visible": False}
                         ]
@@ -190,7 +189,7 @@ def create_savs_heatmap(df_savs, name="protein1", vmin=60, vmax=100, esm_thresho
         ],
         width=width,
         height=height,
-        title_text=f'Variant immunogenicity heatmap across variants in {name}',
+        title_text=f'Immunogenicity heatmap across variants in {name}',
         yaxis1_title="Wild-type",
         xaxis2_title="Position",
         yaxis2_title="Mutation",
@@ -200,7 +199,30 @@ def create_savs_heatmap(df_savs, name="protein1", vmin=60, vmax=100, esm_thresho
     # Flip y-axis
     fig.update_yaxes(autorange="reversed", row=2, col=1)
 
+    # add sequence along x-axis on top
+    seq = heatmap_arr["Residue"].tolist()
+    # Plot letters above x-axis
+    for i, aa in enumerate(seq):
+
+        # Place text inside "Wild-type" heatmap
+        color = "black"
+        m = heatmap_arr.loc[i, "Wild-type"] > 83
+        if m:
+            color = "red"
+            aa = f"<b>{aa}</b>"
+            
+        fig.add_annotation(
+            x=i + 1,
+            y=0,  # Center of the "Wild-type" heatmap
+            text=aa,
+            showarrow=False,
+            xref="x1",
+            yref="y1",
+            font=dict(size=12, color="red" if heatmap_arr.loc[i, "Wild-type"] > 85 else "white"),
+        )
+
     return fig
+
 
 
 def plot_deimmunization_plot(
