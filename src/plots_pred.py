@@ -10,12 +10,213 @@ import plotly.graph_objects as go
 import plotly.io as pio
 from plotly.subplots import make_subplots
 
+import src.utils
+
 # Plotly theme simple_white
 pio.templates.default = "simple_white"
 import joblib
 from scipy.spatial.distance import pdist, squareform
 
-import src.utils
+def df_savs_to_heatmap_pirs_esm(df_savs):
+    amino_acids = list("RHKDEFGILMNPQSTVWYAC")
+    cols = ["Wild-type"] + amino_acids
+    heatmap_arr = pd.DataFrame(columns=cols, index=range(df_savs["pos"].max())).astype(
+        float
+    )
+    heatmap_arr_esm = pd.DataFrame(
+        columns=cols, index=range(df_savs["pos"].max())
+    ).astype(float)
+    for i in range(len(df_savs)):
+        row = df_savs.iloc[i]
+
+        # pIRS
+        wt, pos, mut = row["mut_str"][0], int(row["mut_str"][1:-1]), row["mut_str"][-1]
+
+        heatmap_arr.loc[pos - 1, mut] = row["pIRS_rank"]
+        heatmap_arr.loc[pos - 1, "Residue"] = wt
+        heatmap_arr.loc[pos - 1, "Wild-type"] = row["wt_pIRS_rank"]
+
+        # ESM
+        heatmap_arr_esm.loc[pos - 1, mut] = row["esm_rank"]
+        heatmap_arr_esm.loc[pos - 1, "Wild-type"] = np.nan
+        heatmap_arr_esm.loc[pos - 1, "Residue"] = wt
+
+    return heatmap_arr, heatmap_arr_esm
+
+
+def create_savs_heatmap(df_savs, name="protein1", vmin=50, vmax=100, esm_threshold=60,
+                width=1100,
+                height=475):
+
+    # Heatmaps
+    heatmap_arr, heatmap_arr_esm = df_savs_to_heatmap_pirs_esm(df_savs)
+
+    # Plot
+    fig = make_subplots(
+        rows=2,
+        cols=1,
+        shared_xaxes=True,
+        row_heights=[0.15, 0.85],
+        vertical_spacing=0.02,
+    )
+
+    # Variants heatmap
+    heatmap_arr_savs = heatmap_arr.drop(columns=["Wild-type", "Residue"])
+    heatmap_arr_savs_esm = heatmap_arr_esm.drop(columns=["Wild-type", "Residue"]) * 100
+    heatmap_arr_savs_weights = heatmap_arr_savs.copy()
+    m = heatmap_arr_savs_esm <= esm_threshold
+    heatmap_arr_savs_weights[m] = 100
+
+    # Hoverdata
+    # For the main heatmap (SAVs)
+    custom_data_esm = heatmap_arr_savs_esm.T.values
+    custom_data_residue = np.tile(
+        heatmap_arr["Residue"], (len(heatmap_arr_savs.columns), 1)
+    )
+    custom_data_wt_pirs = np.tile(
+        heatmap_arr["Wild-type"].values, (len(heatmap_arr_savs.columns), 1)
+    )
+    # We need separate custom data for pIRS and ESM z-values for the hovertemplate
+    custom_data_pirs_z = heatmap_arr_savs.T.values
+    custom_data_savs = np.stack(
+        [custom_data_residue, custom_data_esm, custom_data_wt_pirs, custom_data_pirs_z],
+        axis=-1,
+    )
+
+    # First heatmap for "Wild-type" - this is trace 0
+    hovertemplate_wt = "%{customdata[0]}%{x}%{customdata[0]}<br><br>Wild-type: %{z:.1f}%<extra></extra>"
+    fig.add_trace(
+        go.Heatmap(
+            z=heatmap_arr[["Wild-type"]].T,
+            x=heatmap_arr.index + 1,
+            y=heatmap_arr[["Wild-type"]].columns,
+            customdata=custom_data_savs,  # Can use either, it's for x-axis labels
+            colorscale="Viridis",
+            zmin=vmin,
+            zmax=vmax,
+            showscale=False,
+            hovertemplate=hovertemplate_wt,
+        ),
+        row=1,
+        col=1,
+    )
+
+    # Second heatmap for pIRS (visible by default) - this is trace 1
+    hovertemplate = "%{customdata[0]}%{x}%{y}<br><br>Variant pIRS: %{z:.1f}%<br>Wild-type pIRS: %{customdata[2]:.1f}%<br><br>ESM: %{customdata[1]:.1f}%<extra></extra>"
+    fig.add_trace(
+        go.Heatmap(
+            z=heatmap_arr_savs.T,
+            x=heatmap_arr.index + 1,
+            y=heatmap_arr_savs.columns,
+            customdata=custom_data_savs,
+            colorscale="Viridis",
+            zmin=vmin,
+            zmax=vmax,
+            colorbar=dict(
+                orientation="h",
+                xanchor="center",
+                yanchor="bottom",
+            ),
+            hovertemplate=hovertemplate,
+            name="pIRS",
+            visible=True,
+        ),
+        row=2,
+        col=1,
+    )
+
+    # Third heatmap for ESM (hidden by default) - this is trace 2
+    # Note: The z-value for pIRS is now in customdata[3]
+    hovertemplate = "%{customdata[0]}%{x}%{y}<br><br>Variant pIRS: %{customdata[3]:.1f}%<br>Wild-type pIRS: %{customdata[2]:.1f}%<br><br>ESM: %{customdata[1]:.1f}%<extra></extra>"
+    fig.add_trace(
+        go.Heatmap(
+            z=heatmap_arr_savs_weights.T,
+            x=heatmap_arr.index + 1,
+            y=heatmap_arr_savs.columns,
+            customdata=custom_data_savs,
+            colorscale="Viridis",
+            zmin=vmin,
+            zmax=vmax,
+            showscale=False,  # Initially hidden
+            colorbar=dict(
+                orientation="h",
+                xanchor="center",
+                yanchor="bottom",
+            ),
+            hovertemplate=hovertemplate,
+            name="ESM",
+            visible=False,
+        ),
+        row=2,
+        col=1,
+    )
+
+    # Update layout
+    fig.update_layout(
+        updatemenus=[
+            # Button to switch to ESM view
+            dict(
+                type="buttons",
+                direction="down",
+                x=1.01,
+                y=0.90,
+                xanchor="center",
+                yanchor="top",
+                showactive=False,
+                buttons=[
+                    dict(
+                        label="Show ESM",
+                        method="update",
+                        args=[
+                            # Update traces: show WT, hide pIRS, show ESM
+                            {"visible": [True, False, True], "showscale": [False, False, True]},
+                            # Update layout: update title and hide this button, show the other
+                            {"title": f'Predicted immunogenicity risk scores for {name} (ESM)',
+                             "updatemenus[0].visible": False,
+                             "updatemenus[1].visible": True}
+                        ]
+                    ),
+                ]
+            ),
+            # Button to switch back to pIRS view
+            dict(
+                type="buttons",
+                direction="down",
+                x=1.01,
+                y=0.90,
+                xanchor="center",
+                yanchor="top",
+                showactive=False,
+                visible=False, # Initially hidden
+                buttons=[
+                    dict(
+                        label="Show pIRS",
+                        method="update",
+                        args=[
+                            # Update traces: show WT, show pIRS, hide ESM
+                            {"visible": [True, True, False], "showscale": [False, True, False]},
+                            # Update layout: update title and hide this button, show the other
+                            {"title": f'Predicted immunogenicity risk scores for {name} (pIRS)',
+                             "updatemenus[0].visible": True,
+                             "updatemenus[1].visible": False}
+                        ]
+                    ),
+                ]
+            ),
+        ],
+        height=height,
+        width=width,
+        title_text=f"Immunogenicity heatmap for variants in {name}",
+        yaxis1_title="Wild-type",
+        xaxis2_title="Residue position",
+        yaxis2_title="Amino acid variant",
+        yaxis=dict(showticklabels=False),  # Hide y-axis labels for the top plot
+    )
+
+    # Flip y-axis
+    fig.update_yaxes(autorange="reversed", row=2, col=1)
+
+    return fig
 
 
 def plot_deimmunization_plot(
@@ -51,7 +252,7 @@ def plot_deimmunization_plot(
 
     # Save heatmap
     df_out = df_heatmap_rank.copy()
-    
+
     # Add aa indices
     indices = [
         f"{i}_{aa}" for aa, i in zip(df_out.index, range(1, len(df_out.index) + 1))
@@ -61,7 +262,7 @@ def plot_deimmunization_plot(
     # Drop cols
     df_out = df_out.drop(columns=["X"])
 
-    #if only_deimmunizing and top_n < 20:
+    # if only_deimmunizing and top_n < 20:
     if only_deimmunizing:
         print(f"Only showing top {top_n} deimmunizing mutations")
         for i in range(len(df_heatmap)):
@@ -80,12 +281,15 @@ def plot_deimmunization_plot(
             mc = m1 & m2
             df_heatmap.iloc[i, mc] = -1
 
-
     # Plot SAVs + ESM plot
     # df_heatmap_filtered = df_heatmap.copy()
     try:
-        df_heatmap_esm = src.utils.get_seq_esm_LLR_dataframe(record.sequence, esm_model=esm_model)
-        df_heatmap_esm_top_n = src.utils.get_logprobs_top_residues(df_heatmap_esm, n=top_n_esm)
+        df_heatmap_esm = src.utils.get_seq_esm_LLR_dataframe(
+            record.sequence, esm_model=esm_model
+        )
+        df_heatmap_esm_top_n = src.utils.get_logprobs_top_residues(
+            df_heatmap_esm, n=top_n_esm
+        )
 
         # Mask below top n
         for i2 in range(len(df_heatmap_esm_top_n)):
@@ -94,7 +298,9 @@ def plot_deimmunization_plot(
             df_heatmap.iloc[i2, mask] = -1
 
     except Exception as e:
-        print(f"Unable to generate ESM2 likelihoods. Try installing ESM requirements with 'pip install -r requirements_esm.txt'.")
+        print(
+            f"Unable to generate ESM2 likelihoods. Try installing ESM requirements with 'pip install -r requirements_esm.txt'."
+        )
         print(f"Exception details:", e)
         print(f"Falling back to zero ESM2 likelihoods.")
         df_heatmap_esm = False
@@ -114,7 +320,7 @@ def plot_deimmunization_plot(
     )
 
     N_variants = len(df_fasta_savs)
-    
+
     title = f"Top {top_n} deimmunizing variants across {record.id} (of {N_variants:,} screened)<br><sup>(Maximum peptide score for given residue mutation)</sup>"
     if only_immunizing:
         title = f"Top {top_n} immunizing variants across {record.id} (of {N_variants:,} screened)<br><sup>(Maximum peptide score for given residue mutation)</sup>"
@@ -167,8 +373,15 @@ def plot_df_heatmap_deimmunizing_mutations(
 
     # Process
     if deimmunize_only:
-        df_melted = process_heatmap(df_heatmap, seq, score_below_n_to_nan=False, scores_below_wt_to_nan=True)
-        df_melted_rank = process_heatmap(df_heatmap_rank, seq, score_below_n_to_nan=False, scores_below_wt_to_nan=True)
+        df_melted = process_heatmap(
+            df_heatmap, seq, score_below_n_to_nan=False, scores_below_wt_to_nan=True
+        )
+        df_melted_rank = process_heatmap(
+            df_heatmap_rank,
+            seq,
+            score_below_n_to_nan=False,
+            scores_below_wt_to_nan=True,
+        )
     else:
         df_melted = process_heatmap(df_heatmap, seq)
         df_melted_rank = process_heatmap(df_heatmap_rank, seq)
@@ -176,7 +389,6 @@ def plot_df_heatmap_deimmunizing_mutations(
         # Hack: Always negative values
         df_melted["Delta"] = df_melted["Delta"].abs()
         df_melted["Delta"] = df_melted["Delta"] * 100
-
 
     # Hack: Removing missing values
     m1 = df_melted.isna().sum(axis=1) > 1
@@ -391,7 +603,8 @@ def create_custom_colormap(cmap_name, amino_acids):
 
 
 def process_heatmap(
-    df_heatmap, seq,
+    df_heatmap,
+    seq,
     scores_below_wt_to_nan=False,
     score_below_n_to_nan=-0.99,
 ):
@@ -675,7 +888,6 @@ def process_df_fasta(df_in):
         def color_red_underline(s):
             return f"<span style='color:red'>{s}</span>"
 
-
         def color_green(s):
             return f"<span style='color:green'>{s}</span>"
 
@@ -732,7 +944,7 @@ def process_df_fasta(df_in):
         ].apply(color_red)
         all_sequences.loc[mask_ref, "pIRS_text"] = all_sequences0.loc[
             mask_ref, "pIRS_text"
-        ].apply(nothing)  
+        ].apply(nothing)
 
         # Apply core_seq formatting
         all_sequences.loc[mask_90_plus, "core_seq"] = all_sequences0.loc[
@@ -745,7 +957,6 @@ def process_df_fasta(df_in):
             mask_ref, "core_seq"
         ].apply(color_green)
 
-
         # Apply peptide formatting using vectorized operations
         all_sequences.loc[mask_90_plus, "peptide"] = all_sequences0.loc[
             mask_90_plus
@@ -756,9 +967,9 @@ def process_df_fasta(df_in):
         all_sequences.loc[mask_below_83, "peptide"] = all_sequences0.loc[
             mask_below_83
         ].apply(format_peptide_below_83, axis=1)
-        all_sequences.loc[mask_ref, "peptide"] = all_sequences0.loc[
-            mask_ref
-        ].apply(format_peptide_ref, axis=1)
+        all_sequences.loc[mask_ref, "peptide"] = all_sequences0.loc[mask_ref].apply(
+            format_peptide_ref, axis=1
+        )
 
         # Core marker - vectorized
         def create_core_marker(core_pos):
@@ -872,9 +1083,7 @@ def _get_gene_order_strs2(df_fasta):
         return f"<span style='color:green'>{s}</span>"
 
     # Pre-compute gene columns once
-    gene_cols = [
-        gene for gene in ["DRB1"] if f"core_seq" in df_fasta.columns
-    ]
+    gene_cols = [gene for gene in ["DRB1"] if f"core_seq" in df_fasta.columns]
 
     if not gene_cols:
         return [""] * len(df_fasta)
@@ -882,7 +1091,7 @@ def _get_gene_order_strs2(df_fasta):
     # Pre-compute spacing mapping
     spacing_map = {
         "DRB1": " ",
-        }
+    }
 
     # Extract all needed columns at once using vectorized operations
     pirs_cols = [f"pIRS_rank" for gene in gene_cols]
@@ -996,9 +1205,9 @@ def plot_df_fasta_all_sequences_merged(
         "pIRS_rank",
         "core_seq",
         "in_reference_str",
-        #"DRB1_pIRS_rank",
-        #"DRB1_in_reference",
-        #"DRB1_core_seq",
+        # "DRB1_pIRS_rank",
+        # "DRB1_in_reference",
+        # "DRB1_core_seq",
         "core_marker",
         "gene_order_str",
     ]
@@ -1044,7 +1253,6 @@ def plot_df_fasta_all_sequences_merged(
     )
 
     fig.update_xaxes(title_text="15-mer peptide starting position")
-
 
     fig.update_layout(
         hovermode="closest",

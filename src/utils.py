@@ -7,9 +7,10 @@ import biolib
 import lz4.frame
 import numpy as np
 import pandas as pd
+from bs4 import BeautifulSoup
 
 import src.processing
-from bs4 import BeautifulSoup
+
 
 def merge_html_files(merge_files, output_file, remove=True, verbose=False):
 
@@ -67,6 +68,7 @@ def merge_html_files(merge_files, output_file, remove=True, verbose=False):
         for file in merge_files:
             if os.path.exists(file):
                 os.remove(file)
+
 
 def merge_sav_files(sav_files, verbose=True):
 
@@ -136,10 +138,13 @@ def merge_all_gene_pIRS_files(pIRS_files):
 
         if i == 0:
             update_cols = [
-                "id", "peptide_pos", "peptide_seq",
-                "pIRS", "pIRS_rank",
-                "core_seq", 
-                ]
+                "id",
+                "peptide_pos",
+                "peptide_seq",
+                "pIRS",
+                "pIRS_rank",
+                "core_seq",
+            ]
             df_merged[["id", "peptide_pos", "peptide_seq"]] = df_gene[
                 ["id", "peptide_pos", "peptide_seq"]
             ]
@@ -157,25 +162,22 @@ def merge_all_gene_pIRS_files(pIRS_files):
 
         # Set rank, core to max scoring one
         m = (df_gene["pIRS_rank"] >= df_merged["pIRS_rank"].values).values
-        
+
         # Present
         df_merged.loc[m, "core_seq"] = df_gene.loc[m, "core_seq"].values
 
         # Only update pIRS rank if not in reference
         m2 = m & (df_gene["in_reference"] != True).values
         df_merged.loc[m2, "pIRS_rank"] = df_gene.loc[m2, "pIRS_rank"].values
-        
+
     # Get core pos
     core_pos = [
-        pep.find(core)
-        for pep, core in df_merged[["peptide_seq", "core_seq"]].values
+        pep.find(core) for pep, core in df_merged[["peptide_seq", "core_seq"]].values
     ]
     df_merged["core_pos"] = core_pos
 
     # Set in_reference to True if ANY gene classes are in_reference
-    V = (
-        (df_merged["in_reference"] == True)
-    )
+    V = df_merged["in_reference"] == True
     df_merged["in_reference"] = V
 
     # Merged rank -> simulated DRB1 rank percentiles for interpretability
@@ -190,6 +192,7 @@ def merge_all_gene_pIRS_files(pIRS_files):
     df_merged["pIRS"] = pIRS
 
     return df_merged
+
 
 def filter_df_irs(
     df_irs,
@@ -229,6 +232,7 @@ def filter_df_irs(
 
     return df_irs
 
+
 def prepare_output_pirs_file(pIRS_file):
 
     df_pirs = pd.read_csv(pIRS_file)
@@ -240,18 +244,28 @@ def prepare_output_pirs_file(pIRS_file):
 
     df_pirs["gene_class"] = "DRB1"
 
-    order = ['id', 'peptide_pos',
-            "gene_class",
-            'peptide_seq',
-            'core_pos',
-            'core_seq', 
-            'pIRS', 'pIRS_rank',
-            'in_reference',
-            'core_0', 'core_1', 'core_2', 'core_3', 'core_4', 'core_5', 'core_6',
-        ]
+    order = [
+        "id",
+        "peptide_pos",
+        "gene_class",
+        "peptide_seq",
+        "core_pos",
+        "core_seq",
+        "pIRS",
+        "pIRS_rank",
+        "in_reference",
+        "core_0",
+        "core_1",
+        "core_2",
+        "core_3",
+        "core_4",
+        "core_5",
+        "core_6",
+    ]
     df_pirs = df_pirs[order]
 
     return df_pirs
+
 
 def save_pirs_file_rounded(df_pirs, outfile):
     df_out = df_pirs.copy()
@@ -262,6 +276,7 @@ def save_pirs_file_rounded(df_pirs, outfile):
     df_out["pIRS_rank"] = df_out["pIRS_rank"].apply(lambda x: f"{x:.3f}")
 
     df_out.to_csv(outfile, index=False)
+
 
 def irs_file_to_df_seq(
     irs_file,
@@ -324,6 +339,7 @@ def irs_file_to_df_seq(
 
     return df_out
 
+
 def save_df_fasta_to_pIRS_scores_csv(df_fasta, outdir, population="Global", save=True):
 
     os.makedirs(outdir, exist_ok=True)
@@ -347,7 +363,9 @@ def save_df_fasta_to_pIRS_scores_csv(df_fasta, outdir, population="Global", save
             continue
 
         # Already weighted
-        scores = src.processing.normalize_y_hat_0_100_to_irs(df_fasta[col].values, model_dir=f"model/{gene_class}/peptide", verbose=False)
+        scores = src.processing.normalize_y_hat_0_100_to_irs(
+            df_fasta[col].values, model_dir=f"model/{gene_class}/peptide", verbose=False
+        )
 
         for id in df_fasta["id"].unique():
             m = (df_fasta["id"] == id).values
@@ -358,9 +376,7 @@ def save_df_fasta_to_pIRS_scores_csv(df_fasta, outdir, population="Global", save
     if save:
         # Round to 6 point precision
         numerical_cols = df_scores.select_dtypes(include=[np.number]).columns
-        df_scores[numerical_cols] = df_scores[numerical_cols].map(
-            lambda x: f"{x:.5f}"
-        )
+        df_scores[numerical_cols] = df_scores[numerical_cols].map(lambda x: f"{x:.5f}")
         df_scores.to_csv(f"{outdir}/scores.csv", index=False)
         print(f"Writing summary pIRS file to {outdir}/scores.csv\n")
 
@@ -422,9 +438,10 @@ def get_seq_esm_LLR_dataframe(sequence, esm_model="esm2_t6_8M_UR50D", verbose=Tr
         print(f"Loading ESM-2 model {esm_model} ...")
 
     # Load the pretrained model and its alphabet for the specified model version
+    import esm.pretrained
     import torch
     import torch.nn.functional as F
-    import esm.pretrained
+
     model, alphabet = esm.pretrained.load_model_and_alphabet(esm_model)
     batch_converter = alphabet.get_batch_converter()
 
@@ -505,7 +522,13 @@ def seq_to_df_fasta_savs(seq, _id):
                 start_list.append(pos + 1)
 
     # DataFrame, dropping duplicates
-    df = pd.DataFrame(data={"id": all_15mers_ids_list, "peptide_seq": all_15mers_list, "start": start_list})
+    df = pd.DataFrame(
+        data={
+            "id": all_15mers_ids_list,
+            "peptide_seq": all_15mers_list,
+            "start": start_list,
+        }
+    )
     df["end"] = df["start"] + 14
 
     return df
@@ -516,7 +539,9 @@ def get_gene_class_from_model_dir(model_dir):
     if "DRB1" in model_dir:
         gene_class = "DRB1"
     else:
-        raise Exception(f"Warning: Unable to determine gene class from model path: {model_dir}")
+        raise Exception(
+            f"Warning: Unable to determine gene class from model path: {model_dir}"
+        )
 
     return gene_class
 
@@ -549,7 +574,9 @@ def load_references(human_references_pkl="", extra_references="", verbose=True):
             f"\nLoading human references file (131 MB) from {human_references_pkl} ..."
         )
 
-    assert os.path.exists(human_references_pkl), f"Unable to locate human reference file {human_references_pkl}. Please run 'unzip data_record.zip'"
+    assert os.path.exists(
+        human_references_pkl
+    ), f"Unable to locate human reference file {human_references_pkl}. Please run 'unzip data_record.zip'"
 
     # Human refs pre-computed in csv
     references_set = set()
@@ -598,9 +625,7 @@ def predict_df_fasta(
         df_fasta0["peptide_seq"] = df_fasta0["peptide_seq"].apply(lambda s: s[::-1])
         print(f"After: {df_fasta0['peptide_seq'].tolist()[:5]}")
 
-    X_input, df_try = (
-        src.processing.preprocess_df_fasta_binding_cores(df_fasta0)
-    )
+    X_input, df_try = src.processing.preprocess_df_fasta_binding_cores(df_fasta0)
 
     df_fasta_list = []
     df_outfile_list = []
@@ -681,6 +706,7 @@ def create_single_gene_pIRS_files(pIRS_list, outdir, remove=False):
                 os.remove(f) if os.path.exists(f) else None
 
     return merged_files
+
 
 def model_predict_pirs_and_rank(
     model_path, X_input, model_dir="model/", normalize=True, cap=False, verbose=True

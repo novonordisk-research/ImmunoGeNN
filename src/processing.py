@@ -169,7 +169,9 @@ def preprocess_df_fasta_binding_cores(df_fasta, peptide_col="peptide_seq"):
     # Find max scoring 15mer by aligning all possible 9mer cores
     L = []
     for core_pos in [0, 1, 2, 3, 4, 5, 6]:
-        aligned_seqs = df_fasta_to_test_time_aligned_seqs(df_fasta, core_pos, peptide_col=peptide_col)
+        aligned_seqs = df_fasta_to_test_time_aligned_seqs(
+            df_fasta, core_pos, peptide_col=peptide_col
+        )
         S = pd.Series(aligned_seqs)
         S.name = peptide_col
         S.index = indices
@@ -213,7 +215,6 @@ def get_df_try_scores_rank(df_try):
     return scores, scores_rank
 
 
-
 def immunogenn_predict_df_fasta_trying_binding_cores3(
     model_path,
     model_dir,
@@ -234,21 +235,38 @@ def immunogenn_predict_df_fasta_trying_binding_cores3(
     y_pred_rank_cores = y_pred_rank.reshape(-1, 7)
 
     # Prep dataframe with pIRS, pIRS_rank and per-core IRS
-    df_cores_irs = pd.DataFrame(y_pred_cores, index=df_fasta.index, columns=["0", "1", "2", "3", "4", "5", "6"])
+    df_cores_irs = pd.DataFrame(
+        y_pred_cores, index=df_fasta.index, columns=["0", "1", "2", "3", "4", "5", "6"]
+    )
     df_cores_irs.insert(0, "pIRS", np.max(y_pred_cores, axis=1))
     df_cores_irs.insert(1, "pIRS_rank", np.max(y_pred_rank_cores, axis=1))
 
     # add core_seq and pos
     core_pos = np.argmax(y_pred_rank_cores, axis=1)
-    core_seqs = [pep[core_pos:core_pos+9] for pep, core_pos in zip(df_fasta[peptide_col].values, core_pos)]
+    core_seqs = [
+        pep[core_pos : core_pos + 9]
+        for pep, core_pos in zip(df_fasta[peptide_col].values, core_pos)
+    ]
     df_cores_irs.insert(2, "core_seq", core_seqs)
     df_cores_irs.insert(3, "core_pos", core_pos)
 
     # Add to df_fasta
     df_out = df_fasta.copy()
-    update_cols = ["pIRS", "pIRS_rank", "core_seq", "core_pos", "0", "1", "2", "3", "4", "5", "6"]
+    update_cols = [
+        "pIRS",
+        "pIRS_rank",
+        "core_seq",
+        "core_pos",
+        "0",
+        "1",
+        "2",
+        "3",
+        "4",
+        "5",
+        "6",
+    ]
     df_out[update_cols] = df_cores_irs[update_cols]
-    #df_fasta = df_fasta.join(df_cores_irs)
+    # df_fasta = df_fasta.join(df_cores_irs)
 
     return df_out
 
@@ -267,7 +285,9 @@ def _get_core_pep_preds(
     # 1) Predict with core model (all 7 cores)
     core_model_path = f"{core_model_dir}/model.pkl"
     core_y_hat, core_y_hat_rank = src.utils.model_predict_pirs_and_rank(
-        core_model_path, X_input, model_dir=core_model_dir, 
+        core_model_path,
+        X_input,
+        model_dir=core_model_dir,
     )
 
     # Reshape to get core distribution
@@ -291,6 +311,7 @@ def _get_core_pep_preds(
 
     return pep_y_hat, pep_y_hat_rank, core_y_hat, core_y_hat_rank
 
+
 def predict_df_fasta_cores_and_pep(
     model_dir,
     df_fasta,
@@ -311,10 +332,10 @@ def predict_df_fasta_cores_and_pep(
     df_cores_irs.insert(1, "pIRS_rank", pep_y_hat_rank)
 
     # Get core% distribution
-    A = (df_cores_irs[core_cols] / df_cores_irs["pIRS"].values.reshape(-1, 1))
+    A = df_cores_irs[core_cols] / df_cores_irs["pIRS"].values.reshape(-1, 1)
     # Top 3 only
     k = 3
-    t = -np.partition(-A, k-1, axis=1)[:, k-1]
+    t = -np.partition(-A, k - 1, axis=1)[:, k - 1]
     A[A < t.reshape(-1, 1)] = 0
     # Percent
     A = np.round((A / A.sum(axis=1).values.reshape(-1, 1)) * 100, 3)
@@ -322,7 +343,12 @@ def predict_df_fasta_cores_and_pep(
 
     # add core_seq and pos
     core_pos = np.argmax(core_y_hat_rank, axis=1)
-    core_seqs = np.array([pep[core_pos:core_pos+9] for pep, core_pos in zip(df_fasta[peptide_col].values, core_pos)])
+    core_seqs = np.array(
+        [
+            pep[core_pos : core_pos + 9]
+            for pep, core_pos in zip(df_fasta[peptide_col].values, core_pos)
+        ]
+    )
     df_cores_irs.insert(2, "core_seq", core_seqs)
     df_cores_irs.insert(3, "core_pos", core_pos)
     df_cores_irs.insert(4, "peptide_seq", df_fasta[peptide_col].values)
@@ -358,7 +384,7 @@ def parse_records_to_15mer_df(records):
 def parse_fasta_to_15mer_df(fasta_file, n_records=-1):
     records = list(SeqUtil.parse_fasta(fasta_file))
     df = parse_records_to_15mer_df(records)
-    
+
     return df
 
 
@@ -384,4 +410,3 @@ def data_to_onehot_X_Y(df, validate=True, peptide_col="peptide_seq"):
         y_arr = None
 
     return X_arr, y_arr
-

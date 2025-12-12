@@ -445,6 +445,14 @@ def main(args):
         if args.skip_plots:
             print("\nDone! Skipping plots as requested (--skip_plots true)\n")
             return
+        
+        # Plot SAVs for first sequence
+        fig = src.plots_pred.create_savs_heatmap(df_mut_weighted, name=record.id, width=1100, height=600)
+        plotly_fig_to_html(
+            fig,
+            f"{args.outdir}/SAVs_heatmap.html",
+            include_plotlyjs=False,
+        )
 
         # Re-predict
         records = parse_fasta_records(outfile)
@@ -505,7 +513,8 @@ def main(args):
         src.mutation_editor.add_fig_clickable_mutation_editor(fig, record, args.outdir)
         merge_files = [
             f"{args.outdir}/plots.html",
-            f"{args.outdir}/mutation_editor.html",
+            f"{args.outdir}/SAVs_heatmap.html",
+            #f"{args.outdir}/mutation_editor.html",
         ]
         src.utils.merge_html_files(
             merge_files=merge_files,
