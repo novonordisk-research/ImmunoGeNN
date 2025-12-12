@@ -435,11 +435,14 @@ def main(args):
             all_records.extend(records)
 
         title = ""
+        max_value = 100
         if args.mode == "deimmunize":
             title = f"Ranked, deimmunizing variants across {record.id}"
+            max_value = 100
             outfile = f"{args.outdir}/deimmunized_variants.fasta"
         elif args.mode == "immunize":
             title = f"Ranked, immunizing variants across {record.id}"
+            max_value = 0
             outfile = f"{args.outdir}/immunized_variants.fasta"
 
         biolib.utils.SeqUtil.write_records_to_fasta(outfile, all_records)
@@ -450,7 +453,7 @@ def main(args):
             return
         
         # Plot SAVs for first sequence
-        fig = src.plots_pred.create_savs_heatmap(df_mut_weighted, name=record.id, width=1050, height=600)
+        fig = src.plots_pred.create_savs_heatmap(df_mut_weighted, name=record.id, max_value=max_value, width=1050, height=600)
         plotly_fig_to_html(
             fig,
             f"{args.outdir}/SAVs_heatmap.html",

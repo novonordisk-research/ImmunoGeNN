@@ -45,7 +45,7 @@ def df_savs_to_heatmap_pirs_esm(df_savs):
 
 
 
-def create_savs_heatmap(df_savs, name="protein1", vmin=50, vmax=100, esm_threshold=60, width=950, height=600):
+def create_savs_heatmap(df_savs, name="protein1", vmin=50, vmax=100, esm_threshold=60, max_value=100, width=950, height=600):
 
     # Heatmaps
     heatmap_arr, heatmap_arr_esm = df_savs_to_heatmap_pirs_esm(df_savs)
@@ -63,7 +63,7 @@ def create_savs_heatmap(df_savs, name="protein1", vmin=50, vmax=100, esm_thresho
     heatmap_arr_savs_esm = heatmap_arr_esm.drop(columns=["Wild-type", "Residue"]) * 100
     heatmap_arr_savs_weights = heatmap_arr_savs.copy()
     m = heatmap_arr_savs_esm <= esm_threshold
-    heatmap_arr_savs_weights[m] = 100
+    heatmap_arr_savs_weights[m] = max_value
 
     # Hoverdata
     # For the main heatmap (SAVs)
