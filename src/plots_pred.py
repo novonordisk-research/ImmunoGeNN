@@ -44,21 +44,20 @@ def df_savs_to_heatmap_pirs_esm(df_savs):
     return heatmap_arr, heatmap_arr_esm
 
 
-def create_savs_heatmap(df_savs, name="protein1", vmin=50, vmax=100, esm_threshold=60,
-                width=1100,
-                height=475):
+
+
+def create_savs_heatmap(df_savs, name="protein1", vmin=60, vmax=100, esm_threshold=60, width=1050, height=600):
 
     # Heatmaps
     heatmap_arr, heatmap_arr_esm = df_savs_to_heatmap_pirs_esm(df_savs)
 
     # Plot
-    fig = make_subplots(
-        rows=2,
-        cols=1,
-        shared_xaxes=True,
-        row_heights=[0.15, 0.85],
-        vertical_spacing=0.02,
-    )
+    fig = make_subplots(rows=2, cols=1,
+                        shared_xaxes=True,
+                        row_heights=[0.15, 0.85],
+                        vertical_spacing=0.02,
+                        )
+
 
     # Variants heatmap
     heatmap_arr_savs = heatmap_arr.drop(columns=["Wild-type", "Residue"])
@@ -70,86 +69,71 @@ def create_savs_heatmap(df_savs, name="protein1", vmin=50, vmax=100, esm_thresho
     # Hoverdata
     # For the main heatmap (SAVs)
     custom_data_esm = heatmap_arr_savs_esm.T.values
-    custom_data_residue = np.tile(
-        heatmap_arr["Residue"], (len(heatmap_arr_savs.columns), 1)
-    )
-    custom_data_wt_pirs = np.tile(
-        heatmap_arr["Wild-type"].values, (len(heatmap_arr_savs.columns), 1)
-    )
+    custom_data_residue = np.tile(heatmap_arr["Residue"], (len(heatmap_arr_savs.columns), 1))
+    custom_data_wt_pirs = np.tile(heatmap_arr["Wild-type"].values, (len(heatmap_arr_savs.columns), 1))
     # We need separate custom data for pIRS and ESM z-values for the hovertemplate
     custom_data_pirs_z = heatmap_arr_savs.T.values
-    custom_data_savs = np.stack(
-        [custom_data_residue, custom_data_esm, custom_data_wt_pirs, custom_data_pirs_z],
-        axis=-1,
-    )
+    custom_data_savs = np.stack([custom_data_residue, custom_data_esm, custom_data_wt_pirs, custom_data_pirs_z], axis=-1)
 
     # First heatmap for "Wild-type" - this is trace 0
-    hovertemplate_wt = "%{customdata[0]}%{x}%{customdata[0]}<br><br>Wild-type: %{z:.1f}%<extra></extra>"
-    fig.add_trace(
-        go.Heatmap(
-            z=heatmap_arr[["Wild-type"]].T,
-            x=heatmap_arr.index + 1,
-            y=heatmap_arr[["Wild-type"]].columns,
-            customdata=custom_data_savs,  # Can use either, it's for x-axis labels
-            colorscale="Viridis",
-            zmin=vmin,
-            zmax=vmax,
-            showscale=False,
-            hovertemplate=hovertemplate_wt,
-        ),
-        row=1,
-        col=1,
-    )
+    hovertemplate_wt="%{customdata[0]}%{x}%{customdata[0]}<br><br>Wild-type: %{z:.1f}%<extra></extra>"
+    fig.add_trace(go.Heatmap(
+        z=heatmap_arr[["Wild-type"]].T,
+        x=heatmap_arr.index + 1,
+        y=heatmap_arr[["Wild-type"]].columns,
+        customdata=custom_data_savs, # Can use either, it's for x-axis labels
+        colorscale="Viridis",
+        zmin=vmin,
+        zmax=vmax,
+        showscale=False,
+        hovertemplate=hovertemplate_wt,
+    ), row=1, col=1)
+
 
     # Second heatmap for pIRS (visible by default) - this is trace 1
-    hovertemplate = "%{customdata[0]}%{x}%{y}<br><br>Variant pIRS: %{z:.1f}%<br>Wild-type pIRS: %{customdata[2]:.1f}%<br><br>ESM: %{customdata[1]:.1f}%<extra></extra>"
-    fig.add_trace(
-        go.Heatmap(
-            z=heatmap_arr_savs.T,
-            x=heatmap_arr.index + 1,
-            y=heatmap_arr_savs.columns,
-            customdata=custom_data_savs,
-            colorscale="Viridis",
-            zmin=vmin,
-            zmax=vmax,
-            colorbar=dict(
-                orientation="h",
-                xanchor="center",
-                yanchor="bottom",
-            ),
-            hovertemplate=hovertemplate,
-            name="pIRS",
-            visible=True,
-        ),
-        row=2,
-        col=1,
-    )
+    hovertemplate="%{customdata[0]}%{x}%{y}<br><br>Variant pIRS: %{z:.1f}%<br>Wild-type pIRS: %{customdata[2]:.1f}%<br><br>ESM: %{customdata[1]:.1f}%<extra></extra>"
+    fig.add_trace(go.Heatmap(
+        z=heatmap_arr_savs.T,
+        x=heatmap_arr.index + 1,
+        y=heatmap_arr_savs.columns,
+        customdata=custom_data_savs,
+        colorscale="Viridis",
+        zmin=vmin,
+        zmax=vmax,
+        colorbar=dict(title="pIRS"),
+        # colorbar=dict(
+        #     orientation='h',
+        #     xanchor='center',
+        #     yanchor='bottom',
+        # ),
+        hovertemplate=hovertemplate,
+        name='pIRS',
+        visible=True
+    ), row=2, col=1)
 
     # Third heatmap for ESM (hidden by default) - this is trace 2
     # Note: The z-value for pIRS is now in customdata[3]
-    hovertemplate = "%{customdata[0]}%{x}%{y}<br><br>Variant pIRS: %{customdata[3]:.1f}%<br>Wild-type pIRS: %{customdata[2]:.1f}%<br><br>ESM: %{customdata[1]:.1f}%<extra></extra>"
-    fig.add_trace(
-        go.Heatmap(
-            z=heatmap_arr_savs_weights.T,
-            x=heatmap_arr.index + 1,
-            y=heatmap_arr_savs.columns,
-            customdata=custom_data_savs,
-            colorscale="Viridis",
-            zmin=vmin,
-            zmax=vmax,
-            showscale=False,  # Initially hidden
-            colorbar=dict(
-                orientation="h",
-                xanchor="center",
-                yanchor="bottom",
-            ),
-            hovertemplate=hovertemplate,
-            name="ESM",
-            visible=False,
-        ),
-        row=2,
-        col=1,
-    )
+    hovertemplate="%{customdata[0]}%{x}%{y}<br><br>Variant pIRS: %{customdata[3]:.1f}%<br>Wild-type pIRS: %{customdata[2]:.1f}%<br><br>ESM: %{customdata[1]:.1f}%<extra></extra>"
+    fig.add_trace(go.Heatmap(
+        z=heatmap_arr_savs_weights.T,
+        x=heatmap_arr.index + 1,
+        y=heatmap_arr_savs.columns,
+        customdata=custom_data_savs,
+        colorscale="Viridis",
+        zmin=vmin,
+        zmax=vmax,
+        showscale=False, # Initially hidden
+        colorbar=dict(title="pIRS"),
+        # colorbar=dict(
+        #     orientation='h',
+        #     xanchor='center',
+        #     yanchor='bottom',
+        # ),
+        hovertemplate=hovertemplate,
+        name='ESM',
+        visible=False
+    ), row=2, col=1)
+
 
     # Update layout
     fig.update_layout(
@@ -159,19 +143,19 @@ def create_savs_heatmap(df_savs, name="protein1", vmin=50, vmax=100, esm_thresho
                 type="buttons",
                 direction="down",
                 x=1.01,
-                y=0.90,
+                y=1.10,
                 xanchor="center",
                 yanchor="top",
                 showactive=False,
                 buttons=[
                     dict(
-                        label="Show ESM",
+                        label="Filter by ESM",
                         method="update",
                         args=[
                             # Update traces: show WT, hide pIRS, show ESM
                             {"visible": [True, False, True], "showscale": [False, False, True]},
                             # Update layout: update title and hide this button, show the other
-                            {"title": f'Predicted immunogenicity risk scores for {name} (ESM)',
+                            {"title_text": f'Variant immunogenicity heatmap across {name}',
                              "updatemenus[0].visible": False,
                              "updatemenus[1].visible": True}
                         ]
@@ -183,7 +167,7 @@ def create_savs_heatmap(df_savs, name="protein1", vmin=50, vmax=100, esm_thresho
                 type="buttons",
                 direction="down",
                 x=1.01,
-                y=0.90,
+                y=1.10,
                 xanchor="center",
                 yanchor="top",
                 showactive=False,
@@ -196,7 +180,7 @@ def create_savs_heatmap(df_savs, name="protein1", vmin=50, vmax=100, esm_thresho
                             # Update traces: show WT, show pIRS, hide ESM
                             {"visible": [True, True, False], "showscale": [False, True, False]},
                             # Update layout: update title and hide this button, show the other
-                            {"title": f'Predicted immunogenicity risk scores for {name} (pIRS)',
+                            {"title_text": f'Variant immunogenicity heatmap across {name}',
                              "updatemenus[0].visible": True,
                              "updatemenus[1].visible": False}
                         ]
@@ -204,13 +188,13 @@ def create_savs_heatmap(df_savs, name="protein1", vmin=50, vmax=100, esm_thresho
                 ]
             ),
         ],
-        height=height,
         width=width,
-        title_text=f"Immunogenicity heatmap for variants in {name}",
+        height=height,
+        title_text=f'Variant immunogenicity heatmap across variants in {name}',
         yaxis1_title="Wild-type",
-        xaxis2_title="Residue position",
-        yaxis2_title="Amino acid variant",
-        yaxis=dict(showticklabels=False),  # Hide y-axis labels for the top plot
+        xaxis2_title="Position",
+        yaxis2_title="Mutation",
+        yaxis=dict(showticklabels=False) # Hide y-axis labels for the top plot
     )
 
     # Flip y-axis
@@ -1153,6 +1137,7 @@ def plot_df_fasta_all_sequences_merged(
     df_fasta,
     percentiles_85_95_99=(),
     gene_class="",
+    title="",
     y_min=-0.125,
     y_max=1.1,
     width=1250,
@@ -1189,8 +1174,9 @@ def plot_df_fasta_all_sequences_merged(
     # Get gene order strings
     order_strs = _get_gene_order_strs2(df_fasta)
     all_sequences["gene_order_str"] = order_strs
-
-    title = f"Predicted peptide immunogenicity across {n_seqs} sequences"
+    
+    if title == "":
+        title = f"Predicted peptide immunogenicity across {n_seqs} sequences"
     if gene_class:
         title = f"{gene_class} " + title
 

@@ -197,10 +197,10 @@ def plotly_fig_to_html(fig, outname, include_plotlyjs=False):
 
 
 def plot_all_sequences_merged(
-    df_fasta, gene_class="", outdir="output", include_plotlyjs=True
+    df_fasta, gene_class="", title="", outdir="output", include_plotlyjs=True
 ):
     fig = src.plots_pred.plot_df_fasta_all_sequences_merged(
-        df_fasta, gene_class=gene_class, width=1100, height=475
+        df_fasta, title=title, gene_class=gene_class, width=1100, height=475
     )
 
     plotly_fig_to_html(fig, f"{outdir}/plots.html", include_plotlyjs=include_plotlyjs)
@@ -434,9 +434,12 @@ def main(args):
             records = src.deimm.df_mut_weighted_to_fasta_records(df_sub, record, top_n=args.variants_to_generate)
             all_records.extend(records)
 
+        title = ""
         if args.mode == "deimmunize":
+            title = f"Suggested deimmunizing variants across {record.id}"
             outfile = f"{args.outdir}/deimmunized_variants.fasta"
         elif args.mode == "immunize":
+            title = f"Suggested immunizing variants across {record.id}"
             outfile = f"{args.outdir}/immunized_variants.fasta"
 
         biolib.utils.SeqUtil.write_records_to_fasta(outfile, all_records)
@@ -447,7 +450,7 @@ def main(args):
             return
         
         # Plot SAVs for first sequence
-        fig = src.plots_pred.create_savs_heatmap(df_mut_weighted, name=record.id, width=1100, height=600)
+        fig = src.plots_pred.create_savs_heatmap(df_mut_weighted, name=record.id, width=1050, height=600)
         plotly_fig_to_html(
             fig,
             f"{args.outdir}/SAVs_heatmap.html",
@@ -474,6 +477,7 @@ def main(args):
 
         plot_all_sequences_merged(
             df_merged2,
+            title=title,
             gene_class="",
             outdir=args.outdir,
             include_plotlyjs=True,
