@@ -403,6 +403,9 @@ def main(args):
         df_mut = src.deimm.df_fasta_savs_to_df_mut(df_merged, record_orig, esm_model=args.esm_model)
         df_mut_weighted = src.deimm.weight_df_mut(df_mut)
 
+        # Write heatmap
+        df_mut_weighted.to_csv(f"{args.outdir}/SAVs_heatmap.csv")
+
         # Select n per region
         all_records = []
         for r in args.ranges:

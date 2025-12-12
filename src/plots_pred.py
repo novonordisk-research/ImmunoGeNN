@@ -51,6 +51,7 @@ def plot_deimmunization_plot(
 
     # Save heatmap
     df_out = df_heatmap_rank.copy()
+    
     # Add aa indices
     indices = [
         f"{i}_{aa}" for aa, i in zip(df_out.index, range(1, len(df_out.index) + 1))
@@ -627,12 +628,6 @@ def df_fasta_savs_to_2d_heatmap(df_fasta_savs, seq, pIRS_col="pIRS", norm=False)
         pos = row["peptide_pos"] - 1
         pos_aa = aa_to_idx[row["mut_to"]]
         arr[pos, pos_aa] = row[pIRS_col]
-
-    # Normalize by wt_score?
-    # if norm:
-    #     for pos, aa_orig in enumerate(seq):
-    #         wt_score = arr[pos, aa_to_idx[aa_orig]]
-    #         arr[pos] = arr[pos] - wt_score
 
     # Annotate w/ sequence and cols
     aa_order = list("CWGMPSTDLEFQNAHVYRIKX")
