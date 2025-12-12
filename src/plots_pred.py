@@ -201,11 +201,12 @@ def create_savs_heatmap(df_savs, name="protein1", vmin=50, vmax=100, esm_thresho
 
     # add sequence along x-axis on top
     seq = heatmap_arr["Residue"].tolist()
+
     # Plot letters above x-axis
     for i, aa in enumerate(seq):
 
         # Place text inside "Wild-type" heatmap
-        color = "black"
+        color = "white"
         m = heatmap_arr.loc[i, "Wild-type"] > 83
         if m:
             color = "red"
@@ -218,7 +219,7 @@ def create_savs_heatmap(df_savs, name="protein1", vmin=50, vmax=100, esm_thresho
             showarrow=False,
             xref="x1",
             yref="y1",
-            font=dict(size=12, color="red" if heatmap_arr.loc[i, "Wild-type"] > 85 else "white"),
+            font=dict(size=12, color=color),
         )
 
     return fig

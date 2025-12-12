@@ -436,10 +436,10 @@ def main(args):
 
         title = ""
         if args.mode == "deimmunize":
-            title = f"Suggested deimmunizing variants across {record.id}"
+            title = f"Ranked, deimmunizing variants across {record.id}"
             outfile = f"{args.outdir}/deimmunized_variants.fasta"
         elif args.mode == "immunize":
-            title = f"Suggested immunizing variants across {record.id}"
+            title = f"Ranked, immunizing variants across {record.id}"
             outfile = f"{args.outdir}/immunized_variants.fasta"
 
         biolib.utils.SeqUtil.write_records_to_fasta(outfile, all_records)
