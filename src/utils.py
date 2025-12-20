@@ -326,45 +326,54 @@ def irs_file_to_df_seq(
 
     return df_out
 
-
 def save_df_fasta_to_pIRS_scores_csv(df_fasta, outdir, population="Global", save=True):
+
+    def _sum_by_contiguous_id(ids: np.ndarray, values: np.ndarray):
+        """
+        ids must be contiguous-by-group, e.g. [1,1,1,2,2,3,3,3]
+        Returns (unique_ids_in_order, sums_in_order)
+        """
+        if len(ids) == 0:
+            return ids, values
+
+        # find starts of each new id block
+        starts = np.flatnonzero(np.r_[True, ids[1:] != ids[:-1]])
+        unique_ids = ids[starts]
+        sums = np.add.reduceat(values, starts)
+        return unique_ids, sums
 
     os.makedirs(outdir, exist_ok=True)
 
-    # Scores 6 point precision
-    S_scores = df_fasta.groupby("id", sort=False)["pIRS"].sum()
-    df_scores = pd.DataFrame(
-        {
-            "id": S_scores.index,
-            "population": f"{population}",
-        }
-    )
+    # Preserve first-seen ID order
+    ids_in_order = pd.unique(df_fasta["id"])
 
-    df_scores.index = df_scores["id"]
+    df_scores = pd.DataFrame({"id": ids_in_order, "population": population})
+    df_scores = df_scores.set_index("id", drop=False)
 
     gene_classes = ["DRB1"]
     for gene_class in gene_classes:
-
-        col = f"pIRS_rank"
-        if not col in df_fasta.columns:
+        col = "pIRS_rank"
+        if col not in df_fasta.columns:
             continue
 
         # Already weighted
         scores = src.processing.normalize_y_hat_0_100_to_irs(
-            df_fasta[col].values, model_dir=f"model/{gene_class}/peptide", verbose=False
+            df_fasta[col].to_numpy(),
+            model_dir=f"model/{gene_class}/peptide",
+            verbose=False,
         )
 
-        for id in df_fasta["id"].unique():
-            m = (df_fasta["id"] == id).values
-            pIRS_weighted_sum = scores[m].sum()
-            df_scores.loc[id, f"{gene_class}_pIRS_sum"] = pIRS_weighted_sum
+        ids_arr = df_fasta["id"].to_numpy()
 
-    # Save
+        # O(n) aggregation if ids are contiguous
+        unique_ids, sums = _sum_by_contiguous_id(ids_arr, scores)
+
+        # Assign without per-id loops
+        df_scores.loc[unique_ids, f"{gene_class}_pIRS_sum"] = sums
+
     if save:
-        # Round to 6 point precision
-        numerical_cols = df_scores.select_dtypes(include=[np.number]).columns
-        df_scores[numerical_cols] = df_scores[numerical_cols].map(lambda x: f"{x:.5f}")
-        df_scores.to_csv(f"{outdir}/scores.csv", index=False)
+        # Keep numeric in df_scores; only format at write time (much faster)
+        df_scores.to_csv(f"{outdir}/scores.csv", index=False, float_format="%.5f")
         print(f"Writing summary pIRS file to {outdir}/scores.csv\n")
 
     return df_scores

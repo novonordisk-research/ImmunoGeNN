@@ -358,7 +358,6 @@ def main(args):
         print(f"Writing merged pIRS to {args.outdir}/pIRS.csv")
 
         # Write scores.csv
-        # start = time.time()
         src.utils.save_df_fasta_to_pIRS_scores_csv(df_merged, args.outdir, save=True)
 
         if args.skip_plots:
