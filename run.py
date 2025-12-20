@@ -430,7 +430,7 @@ def main(args):
             elif args.mode == "immunize":
                 df_sub = df_sub[df_sub['delta'] > 0]
                 df_sub = df_sub.sort_values(by='weight', ascending=False)
-                print(f"\Immunizing variants in range: {start}-{end} ({df_sub.shape[0]} available mutations)")
+                print(f"\nImmunizing variants in range: {start}-{end} ({df_sub.shape[0]} available mutations)")
 
             records = src.deimm.df_mut_weighted_to_fasta_records(df_sub, record, top_n=args.variants_to_generate)
             all_records.extend(records)
