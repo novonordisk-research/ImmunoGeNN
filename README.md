@@ -1,4 +1,7 @@
 ## ImmunoGeNN
+
+![ImmunoGeNN Logo](img/logo.png)
+
 ImmunoGeNN accepts input protein sequences and predicts peptide MHC-II immunogenicity risk scores (pIRS) based on allele frequencies in the global population. It predicts risk scores at over 3 orders of magnitude the rate of NetMHCIIpan-4.3, while sharing a >95% Spearman R correlation on the NetMHCIIpan-4.3 test set and ~47% with experimentally presented peptides (MAPPs). Read more in our [EurIPS 2025 SIMBIOCHEM workshop paper](https://openreview.net/forum?id=kOJQm9YXnB).
 
 Example FASTA input:
@@ -100,6 +103,11 @@ design3,Global,5.13089
 - id: Sequence identifier from input FASTA
 - population: Population for which pIRS is calculated
 - DRB1_pIRS_sum: Sum of pIRS scores across all peptides in the sequence
+
+### Deimmunization / Immunization visualization
+Visualizes the immunogenicity effect of peptide variants across the sequence:
+- ![Deimmunization](img/deimmunization_example.png)
+- ![Immunogenicity heatmap](img/heatmap.png)
 
 ----
 
