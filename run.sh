@@ -1,3 +1,5 @@
+set -e 
+
 # Timing
 start_time=$(date +%s)
 echo -e "Processing sequences from $2\n\n"

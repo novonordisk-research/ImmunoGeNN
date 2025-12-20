@@ -543,11 +543,11 @@ def pbar_percent(pbar, target_percentage):
     """
     current_percentage = pbar.n
     if target_percentage > current_percentage:
-        difference = target_percentage - current_percentage
+        difference = round(target_percentage - current_percentage, 2)
         pbar.update(difference)
 
     elif target_percentage < current_percentage:
-        pbar.n = target_percentage
+        pbar.n = round(target_percentage, 2)
 
     pbar.refresh()
 
