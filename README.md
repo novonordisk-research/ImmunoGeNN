@@ -2,7 +2,7 @@
 
 ![ImmunoGeNN Logo](img/logo_075.png)
 
-ImmunoGeNN accepts input protein sequences and predicts peptide MHC-II immunogenicity risk scores (pIRS) based on allele frequencies in the global population. It predicts risk scores at over 3 orders of magnitude the rate of NetMHCIIpan-4.3, while sharing a >95% Spearman R correlation on the NetMHCIIpan-4.3 test set and ~47% with experimentally presented peptides (MAPPs). Read more in our [EurIPS 2025 SIMBIOCHEM workshop paper](https://openreview.net/forum?id=kOJQm9YXnB).
+ImmunoGeNN accepts input protein sequences and predicts population-level immunogenicty risk scores (MHC-II) based on allele frequencies in the global population. It also supports deimmunization and immunization of the first input sequence by screening all single amino acid variants (SAVs) for predicted immunogenicity risk changes and sequence likelihood (ESM2). Read more in our [EurIPS 2025 SIMBIOCHEM workshop paper](https://openreview.net/forum?id=kOJQm9YXnB).
 
 Example FASTA input:
 ```
