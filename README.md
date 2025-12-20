@@ -1,6 +1,6 @@
 ## ImmunoGeNN
 
-![ImmunoGeNN Logo](img/logo.png)
+![ImmunoGeNN Logo](img/logo_075.png)
 
 ImmunoGeNN accepts input protein sequences and predicts peptide MHC-II immunogenicity risk scores (pIRS) based on allele frequencies in the global population. It predicts risk scores at over 3 orders of magnitude the rate of NetMHCIIpan-4.3, while sharing a >95% Spearman R correlation on the NetMHCIIpan-4.3 test set and ~47% with experimentally presented peptides (MAPPs). Read more in our [EurIPS 2025 SIMBIOCHEM workshop paper](https://openreview.net/forum?id=kOJQm9YXnB).
 
@@ -17,7 +17,7 @@ __Web-servers and code:__
 - [DTU Health web-server](https://services.healthtech.dtu.dk/services/ImmunoGeNN/)
 - [GitHub repository](https://github.com/novonordisk-research/ImmunoGeNN)
 
-## Quick start
+## Quick start (local installation)
 
 **Download and install:**
 ```bash
