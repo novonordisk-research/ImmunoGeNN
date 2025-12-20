@@ -6,3 +6,4 @@ __pycache__/
 _old/
 _dev/
 .DS_Store
+test/

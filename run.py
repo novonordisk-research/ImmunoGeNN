@@ -252,7 +252,7 @@ def main(args):
 
         with tqdm(
             total=100,
-            bar_format="{l_bar}{bar}| {n_fmt}/{total_fmt} [{elapsed}<{remaining}]",
+            bar_format="{l_bar}{bar}| {n_fmt}/{total_fmt} [{elapsed:.2f}<{remaining}]",
         ) as pbar:
 
             record = records[0]
@@ -292,7 +292,8 @@ def main(args):
 
         batches = biolib_multinode.fasta_batch_records(
             records,
-            work_per_batch_min=2e6,  # Max 2M residues per batch
+            #work_per_batch_min=2e6,  # Max 2M residues per batch
+            work_per_batch_min=1.5e5,  # Max 150K residues per batch
             verbose=False,
         )
 

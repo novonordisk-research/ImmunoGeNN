@@ -137,16 +137,8 @@ def merge_all_gene_pIRS_files(pIRS_files):
         assert not missing_cols, f"Missing columns in {pIRS_file}: {missing_cols}"
 
         if i == 0:
-            update_cols = [
-                "id",
-                "peptide_pos",
-                "peptide_seq",
-                "pIRS",
-                "pIRS_rank",
-                "core_seq",
-            ]
-            df_merged[["id", "peptide_pos", "peptide_seq"]] = df_gene[
-                ["id", "peptide_pos", "peptide_seq"]
+            df_merged[["id", "peptide_pos", "peptide_seq", "core_pos"]] = df_gene[
+                ["id", "peptide_pos", "peptide_seq", "core_pos"]
             ]
             df_merged["pIRS_rank"] = 0.0
             df_merged["pIRS"] = 0.0
@@ -159,6 +151,7 @@ def merge_all_gene_pIRS_files(pIRS_files):
         df_merged[f"pIRS_rank"] = df_gene["pIRS_rank"].values
         df_merged[f"in_reference"] = df_gene["in_reference"].values
         df_merged[f"core_seq"] = df_gene["core_seq"].values
+        df_merged[f"core_pos"] = df_gene["core_pos"].values
 
         # Set rank, core to max scoring one
         m = (df_gene["pIRS_rank"] >= df_merged["pIRS_rank"].values).values
@@ -169,12 +162,6 @@ def merge_all_gene_pIRS_files(pIRS_files):
         # Only update pIRS rank if not in reference
         m2 = m & (df_gene["in_reference"] != True).values
         df_merged.loc[m2, "pIRS_rank"] = df_gene.loc[m2, "pIRS_rank"].values
-
-    # Get core pos
-    core_pos = [
-        pep.find(core) for pep, core in df_merged[["peptide_seq", "core_seq"]].values
-    ]
-    df_merged["core_pos"] = core_pos
 
     # Set in_reference to True if ANY gene classes are in_reference
     V = df_merged["in_reference"] == True
