@@ -224,8 +224,6 @@ def create_savs_heatmap(df_savs, name="protein1", vmin=50, vmax=100, esm_thresho
 
     return fig
 
-
-
 def plot_deimmunization_plot(
     df_fasta_savs,
     record,

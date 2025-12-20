@@ -420,7 +420,7 @@ def main(args):
             # Filter on delta < 0 (deimmunizing)
             if args.mode == "deimmunize":
                 # Filter on only WT > 80%
-                df_sub = df_sub[df_sub['wt_pIRS_rank'] >= args.filter_variant_pirs_rank]
+                #df_sub = df_sub[df_sub['wt_pIRS_rank'] >= args.filter_variant_pirs_rank]
                 df_sub = df_sub[df_sub['delta'] < 0]
                 df_sub = df_sub.sort_values(by='weight', ascending=True)
                 print(f"\nDeimmunizing variants in range: {start}-{end} ({df_sub.shape[0]} available mutations)")
