@@ -300,7 +300,7 @@ def main(args):
         # Otherwise
         with tqdm(
             total=100,
-            bar_format="{l_bar}{bar}| {n_fmt}/{total_fmt} [{elapsed}<{remaining}]",
+            bar_format="{l_bar}{bar}| [{elapsed}<{remaining}]",
         ) as pbar:
 
             # df_fasta_list = []
