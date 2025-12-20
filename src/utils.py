@@ -66,7 +66,7 @@ def merge_html_files(merge_files, output_file, remove=True, verbose=False):
     # Remove pre-merge files
     if remove:
         for file in merge_files:
-            if os.path.exists(file):
+            if file != output_file and os.path.exists(file):
                 os.remove(file)
 
 

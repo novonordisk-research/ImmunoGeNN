@@ -527,7 +527,7 @@ def main(args):
         src.utils.merge_html_files(
             merge_files=merge_files,
             output_file=f"{args.outdir}/plots.html",
-            remove=False,
+            remove=True,
             verbose=args.verbose,
         )
 
