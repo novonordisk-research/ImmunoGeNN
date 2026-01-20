@@ -23,6 +23,7 @@ def ensure_data_record(force: bool = False) -> Path:
         DATA_RECORD_ARCHIVE.unlink()
 
     if not DATA_RECORD_ARCHIVE.exists():
+        print(f"[immunogenn] Downloading data_record.zip from GitHub (this may take a moment)...")
         urllib.request.urlretrieve(DATA_RECORD_URL, DATA_RECORD_ARCHIVE)
 
     with zipfile.ZipFile(DATA_RECORD_ARCHIVE, "r") as archive:
