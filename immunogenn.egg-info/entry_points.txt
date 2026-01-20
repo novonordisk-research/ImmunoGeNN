@@ -1,0 +1,2 @@
+[console_scripts]
+immunogenn = immunogenn.api:main_cli

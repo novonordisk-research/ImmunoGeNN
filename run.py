@@ -2,6 +2,7 @@ import argparse
 import os
 import sys
 import time
+from pathlib import Path
 
 import biolib
 import biolib._internal.utils.multinode as biolib_multinode
@@ -17,7 +18,7 @@ import copy
 import os
 import numpy as np
 
-def parse_args():
+def parse_args(argv=None):
 
     def _boolean_string(string):
         if string.lower() in ("true", "1"):
@@ -46,8 +47,7 @@ def parse_args():
     parser.add_argument(
         "--human_references_pkl",
         type=str,
-        default="data_record/human_references_9mers.pkl.lz4",
-        #default="false",
+        default=None,
         help="Path human references pickle file",
     )
     parser.add_argument(
@@ -115,13 +115,21 @@ def parse_args():
         "--verbose", default=0, type=int, help="Increase output verbosity"
     )
     parser.add_argument("--advanced", help=argparse.SUPPRESS)
-    args = parser.parse_args()
+    args = parser.parse_args(argv)
 
     # # Model list
     # args.model_list = args.models_str.split(",")
 
     model_list = args.model_names_str.split(",")
-    args.model_list = [f"model/{name}/" for name in model_list]
+    base_dir = Path(__file__).resolve().parent
+    package_model_dir = base_dir / "immunogenn" / "model"
+    legacy_model_dir = base_dir / "model"
+    model_root = package_model_dir if package_model_dir.exists() else legacy_model_dir
+    args.model_list = [str(model_root / name.strip()) for name in model_list]
+
+    if args.human_references_pkl is None:
+        default_refs = base_dir / "immunogenn" / "data_record" / "human_references_9mers.pkl.lz4"
+        args.human_references_pkl = str(default_refs)
 
     # Human refs
     if args.human_references_pkl == "false":

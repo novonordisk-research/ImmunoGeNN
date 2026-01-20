@@ -1,0 +1,30 @@
+[build-system]
+requires = ["setuptools>=68", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "immunogenn"
+description = "Programmatic interface for ImmunoGeNN predictions."
+readme = "README.md"
+license = { file = "LICENSE" }
+authors = [{ name = "ImmunoGeNN Authors" }]
+requires-python = ">=3.9"
+dynamic = ["version", "dependencies"]
+
+[project.urls]
+Homepage = "https://github.com/esben-kok/ImmunoGeNN"
+
+[project.scripts]
+immunogenn = "immunogenn.api:main_cli"
+
+[tool.setuptools]
+include-package-data = true
+py-modules = ["run"]
+
+[tool.setuptools.dynamic]
+version = { attr = "immunogenn.__version__" }
+dependencies = { file = ["requirements.txt"] }
+
+[tool.setuptools.packages.find]
+include = ["immunogenn", "immunogenn.*", "src", "src.*"]
+exclude = ["test", "test.*", "__pycache__"]
